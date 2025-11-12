@@ -15,39 +15,81 @@
         <flux:sidebar sticky stashable class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
 
-            <a href="{{ route('dashboard') }}" class="me-5 flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
+            @php
+                $dashUrl = route('dashboard');
+                $routePrefix = 'master'; // default
+                
+                if (auth()->check() && method_exists(auth()->user(), 'hasRole')) {
+                    if (auth()->user()->hasRole('master_admin')) {
+                        $dashUrl = route('master.dashboard');
+                        $routePrefix = 'master';
+                    } elseif (auth()->user()->hasRole('admin')) {
+                        $dashUrl = route('admin.dashboard');
+                        $routePrefix = 'admin';
+                    } elseif (auth()->user()->hasRole('guru')) {
+                        $dashUrl = route('guru.dashboard');
+                        $routePrefix = 'guru';
+                    }
+                }
+            @endphp
+            <a href="{{ $dashUrl }}" class="me-5 flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
                 <x-app-logo />
             </a>
 
             <flux:navlist variant="outline">
                 <flux:navlist.group :heading="__('Dashboard')" class="grid">
-                    <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard admin') }}</flux:navlist.item>
-                    <flux:navlist.item icon="users" :href="route('master.pengguna')" :current="request()->routeIs('pengguna')" wire:navigate>{{ __('Data pengguna') }}</flux:navlist.item>
-                    <flux:navlist.item icon="user" :href="route('master.users')" :current="request()->routeIs('users')" wire:navigate>{{ __('Acount pengguna') }}</flux:navlist.item>
+                    <flux:navlist.item icon="home" :href="$dashUrl" :current="request()->routeIs('master.dashboard') || request()->routeIs('admin.dashboard') || request()->routeIs('guru.dashboard') || request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
+                    @can('menu.pengguna')
+                    <flux:navlist.item icon="users" :href="route($routePrefix . '.pengguna')" :current="request()->routeIs('pengguna')" wire:navigate>{{ __('Data pengguna') }}</flux:navlist.item>
+                    @endcan
+                    @can('menu.users')
+                    <flux:navlist.item icon="user" :href="route($routePrefix . '.users')" :current="request()->routeIs('users')" wire:navigate>{{ __('Acount pengguna') }}</flux:navlist.item>
+                    @endcan
                 </flux:navlist.group>
             </flux:navlist>
 
             <flux:navlist variant="outline">
                 <flux:navlist.group :heading="__('Siswa')" class="grid">
-                    <flux:navlist.item icon="home" :href="route('master.siswa.index')" :current="request()->routeIs('siswa')" wire:navigate>{{ __('Data Siswa') }}</flux:navlist.item>
-                    <flux:navlist.item icon="home" :href="route('master.kelas')" :current="request()->routeIs('kelas')" wire:navigate>{{ __('Kelas') }}</flux:navlist.item>
-                    <flux:navlist.item icon="home" :href="route('master.jurusan')" :current="request()->routeIs('jurusan')" wire:navigate>{{ __('Jurusan') }}</flux:navlist.item>
-                </flux:navlist>
+                    @can('menu.siswa')
+                    <flux:navlist.item icon="home" :href="route($routePrefix . '.siswa.index')" :current="request()->routeIs('siswa')" wire:navigate>{{ __('Data Siswa') }}</flux:navlist.item>
+                    @endcan
+                    @can('menu.kelas')
+                    <flux:navlist.item icon="home" :href="route($routePrefix . '.kelas')" :current="request()->routeIs('kelas')" wire:navigate>{{ __('Kelas') }}</flux:navlist.item>
+                    @endcan
+                    @can('menu.jurusan')
+                    <flux:navlist.item icon="home" :href="route($routePrefix . '.jurusan')" :current="request()->routeIs('jurusan')" wire:navigate>{{ __('Jurusan') }}</flux:navlist.item>
+                    @endcan
+                </flux:navlist.group>
             </flux:navlist>
             <flux:navlist variant="outline">
                 <flux:navlist.group :heading="__('Tahun Ajaran')" class="grid">
-                    <flux:navlist.item icon="home" :href="route('master.tahunAjaran')" :current="request()->routeIs('tahunAjaran')" wire:navigate>{{ __('Tahun ajaran') }}</flux:navlist.item>
+                    @can('menu.tahunAjaran')
+                    <flux:navlist.item icon="home" :href="route($routePrefix . '.tahunAjaran')" :current="request()->routeIs('tahunAjaran')" wire:navigate>{{ __('Tahun ajaran') }}</flux:navlist.item>
+                    @endcan
+                </flux:navlist>
+            </flux:navlist>
+            <flux:navlist variant="outline">
+                <flux:navlist.group :heading="__('Kehadiran')" class="grid">
+                    @can('menu.absensi')
+                    <flux:navlist.item icon="home" :href="route($routePrefix . '.absensi')" :current="request()->routeIs('absensi')" wire:navigate>{{ __('Absensi') }}</flux:navlist.item>
+                    @endcan
                 </flux:navlist>
             </flux:navlist>
             <flux:navlist variant="outline">
                 <flux:navlist.group :heading="__('Penilaian')" class="grid">
-                    <flux:navlist.item icon="home" :href="route('master.penilaian')" :current="request()->routeIs('penilaian')" wire:navigate>{{ __('Template Nilai') }}</flux:navlist.item>
-                    <flux:navlist.item icon="home" :href="route('master.penilaian')" :current="request()->routeIs('penilaian')" wire:navigate>{{ __('Nilai') }}</flux:navlist.item>
+                    @can('menu.penilaian')
+                    <flux:navlist.item icon="home" :href="route($routePrefix . '.penilaian')" :current="request()->routeIs('penilaian')" wire:navigate>{{ __('Template Nilai') }}</flux:navlist.item>
+                    @endcan
+                    @can('menu.nilai')
+                    <flux:navlist.item icon="home" :href="route($routePrefix . '.nilai.index')" :current="request()->routeIs('penilaian')" wire:navigate>{{ __('Nilai') }}</flux:navlist.item>
+                    @endcan
                 </flux:navlist>
             </flux:navlist>
             <flux:navlist variant="outline">
                 <flux:navlist.group :heading="__('Sertifikat')" class="grid">
-                    <flux:navlist.item icon="home" :href="route('master.sertifikat.index')" :current="request()->routeIs('sertifikat')" wire:navigate>{{ __('Sertifikat') }}</flux:navlist.item>
+                    @can('menu.sertifikat')
+                    <flux:navlist.item icon="home" :href="route($routePrefix . '.sertifikat.index')" :current="request()->routeIs('sertifikat')" wire:navigate>{{ __('Sertifikat') }}</flux:navlist.item>
+                    @endcan
                 </flux:navlist>
             </flux:navlist>
 

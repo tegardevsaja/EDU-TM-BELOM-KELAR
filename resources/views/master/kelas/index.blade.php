@@ -1,10 +1,33 @@
+@php
+    $routePrefix = 'master'; // default
+    if (auth()->check() && method_exists(auth()->user(), 'hasRole')) {
+        if (auth()->user()->hasRole('master_admin')) {
+            $routePrefix = 'master';
+        } elseif (auth()->user()->hasRole('admin')) {
+            $routePrefix = 'admin';
+        } elseif (auth()->user()->hasRole('guru')) {
+            $routePrefix = 'guru';
+        }
+    }
+@endphp
+
 <x-layouts.app :title="__('Master Admin Dashboard')">
+    {{-- Search Bar --}}
+    <form method="GET" action="{{ route($routePrefix . '.kelas') }}" class="mb-3 flex gap-2 items-center">
+        <input type="text" name="q" value="{{ $q ?? '' }}" placeholder="Cari kelas, jurusan, atau wali kelas..." class="border rounded-lg px-3 py-2 w-full max-w-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+        <x-ui.button type="submit" variant="primary" size="md">Cari</x-ui.button>
+        @if(!empty($q))
+            <x-ui.button :href="route($routePrefix . '.kelas')" variant="secondary" size="md">Reset</x-ui.button>
+        @endif
+    </form>
     <div class="flex justify-between items-center mb-4">
         <h2 class="text-lg font-semibold">Data Kelas</h2>
-        <a href="{{ route('master.kelas.create') }}"
+        @can('kelas.create')
+        <a href="{{ route($routePrefix . '.kelas.create') }}"
            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
            Tambah Kelas
         </a>
+        @endcan
     </div>
 
     <table class="min-w-full text-sm text-left border">
@@ -33,10 +56,13 @@
                         {{ $kls->waliKelas->name ?? '-' }}
                     </td>
                     <td class="py-3 px-4 flex items-center gap-3">
-                        <a href="{{ route('master.kelas.edit', $kls->id) }}"
+                        @can('kelas.update')
+                        <a href="{{ route($routePrefix . '.kelas.edit', $kls->id) }}"
                            class="text-blue-600 hover:underline">Edit</a>
+                        @endcan
                         
-                        <form action="{{ route('master.kelas.destroy', $kls->id) }}"
+                        @can('kelas.delete')
+                        <form action="{{ route($routePrefix . '.kelas.destroy', $kls->id) }}"
                               method="POST"
                               onsubmit="return confirm('Yakin ingin menghapus data ini?')"
                               class="inline">
@@ -47,6 +73,7 @@
                                 Hapus
                             </button>
                         </form>
+                        @endcan
                     </td>
                 </tr>
             @empty

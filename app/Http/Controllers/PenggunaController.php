@@ -15,10 +15,28 @@ class PenggunaController extends Controller
     /**
      * Tampilkan daftar pengguna
      */
-    public function index(): View
+    public function index(Request $request): View
     {
-        $pengguna = Pengguna::latest()->paginate(10);
-        return view(role_view('pengguna.index'), compact('pengguna'));
+        $q = trim((string) $request->query('q', ''));
+        $pengguna = Pengguna::query()
+            ->when($q !== '', function ($query) use ($q) {
+                $terms = preg_split('/\s+/', $q);
+                $query->where(function ($outer) use ($terms) {
+                    foreach ($terms as $term) {
+                        if ($term === '') continue;
+                        $outer->where(function ($sub) use ($term) {
+                            $sub->where('nama', 'like', "%{$term}%")
+                                ->orWhere('email', 'like', "%{$term}%")
+                                ->orWhere('nik', 'like', "%{$term}%");
+                        });
+                    }
+                });
+            })
+            ->latest()
+            ->paginate(10)
+            ->appends(['q' => $q]);
+
+        return view(role_view('pengguna.index'), compact('pengguna', 'q'));
     }
 
     /**

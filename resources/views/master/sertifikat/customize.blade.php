@@ -11,10 +11,12 @@
                 💡 Klik elemen untuk edit, drag untuk pindah posisi
             </div>
         </div>
-        <div class="bg-gray-100 dark:bg-gray-900 rounded-lg w-full mx-auto relative overflow-hidden border-2 border-dashed border-gray-300 dark:border-gray-700" 
-             style="aspect-ratio: 297/210; max-width: 1000px;"
+        <div class="bg-gray-100 dark:bg-gray-900 rounded-lg w-full mx-auto relative overflow-hidden border-2 border-dashed border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+             style="aspect-ratio: 297/210; max-width: 1122px;"
              x-ref="canvas" 
-             @click="selectedElement=null">
+             tabindex="0"
+             @click="selectedElement=null; isEditingText=false; $refs.canvas.focus()"
+             @keydown="handleKeydown($event)">
             {{-- Background --}}
             <div x-show="backgroundImage" class="absolute inset-0 bg-cover bg-center" :style="`background-image: url(${backgroundImage})`"></div>
             
@@ -22,20 +24,41 @@
             <template x-for="(element,index) in elements" :key="element.id">
                 <div
                     @mousedown.stop.prevent="startDrag($event,index)"
-                    @click.stop="selectedElement=index"
+                    @click.stop="selectedElement=index; $refs.canvas.focus()"
+                    @dblclick.stop="startInlineEdit(index)"
                     :class="selectedElement===index?'ring-4 ring-blue-500 shadow-xl z-50':'ring-1 ring-transparent hover:ring-blue-300'"
                     class="absolute cursor-move px-2 py-1 select-none transition-all duration-200"
                     :style="`left:${element.x}%;top:${element.y}%;transform:translate(-50%,-50%);font-size:${element.fontSize}px;font-family:${element.fontFamily};color:${element.color};font-weight:${element.bold?'bold':'normal'};text-align:${element.align};min-width:100px;`"
                 >
                     {{-- Text Elements --}}
                     <template x-if="element.type==='text'">
-                        <div x-text="element.content" class="whitespace-pre-wrap pointer-events-none"></div>
+                        <div
+                            :contenteditable="isEditingText && selectedElement===index"
+                            @blur="finishInlineEdit($event)"
+                            @keydown.enter.prevent="finishInlineEdit($event)"
+                            class="whitespace-pre-wrap pointer-events-auto bg-white/70 dark:bg-black/20 rounded px-1"
+                            x-text="!isEditingText || selectedElement!==index ? element.content : ''"
+                            x-show="!(isEditingText && selectedElement===index && false)"></div>
                     </template>
                     
                     {{-- Variable Elements --}}
                     <template x-if="element.type==='variable'">
-                        <div class="bg-yellow-100 dark:bg-yellow-900 bg-opacity-60 rounded px-2 py-1 pointer-events-none">
-                            <span x-text="getVariableSample(element.variable)" class="font-medium"></span>
+                        <div class="bg-yellow-100 dark:bg-yellow-900 bg-opacity-60 rounded px-2 py-1 pointer-events-auto">
+                            <span x-text="getVariableLabel(element.variable)" class="font-medium"></span>
+                        </div>
+                    </template>
+                    
+                    {{-- Image Elements --}}
+                    <template x-if="element.type==='image'">
+                        <div class="bg-gray-200 dark:bg-gray-700 rounded border-2 border-dashed border-gray-400 relative overflow-hidden"
+                             :style="`width: ${element.width || 100}px; height: ${element.height || 100}px;`">
+                            <img :src="element.src" class="w-full h-full object-contain" x-show="element.src">
+                            <div x-show="!element.src" class="absolute inset-0 flex items-center justify-center text-xs text-gray-500">
+                                IMG
+                            </div>
+                            {{-- Resize handles --}}
+                            <div x-show="selectedElement===index" class="absolute bottom-0 right-0 w-3 h-3 bg-blue-500 cursor-se-resize"
+                                 @mousedown.stop.prevent="startImageResize($event, index)"></div>
                         </div>
                     </template>
                 </div>
@@ -53,6 +76,163 @@
             </div>
         </div>
     </div>
+
+    {{-- Input Nilai (tampil jika template nilai dipilih) --}}
+    @if(!empty($gradeTemplateId) && $gradeTemplate)
+    <div class="mt-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-5">
+        <div class="flex items-center mb-4">
+            <svg class="w-5 h-5 mr-2 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            <h3 class="font-bold text-lg dark:text-white">Input Nilai - {{ $gradeTemplate->nama_template }}</h3>
+        </div>
+
+        <form action="{{ route('master.sertifikat.grade.store', $gradeTemplateId) }}" method="POST" class="space-y-5" id="form-nilai">
+            @csrf
+            <input type="hidden" name="redirect" value="{{ request()->fullUrl() }}">
+            <input type="hidden" name="computed[total]" id="hf-total">
+            <input type="hidden" name="computed[avg]" id="hf-avg">
+            <input type="hidden" name="computed[weighted_avg]" id="hf-weighted-avg">
+            <input type="hidden" name="computed[grade]" id="hf-grade">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-1">
+                    <label class="block text-sm font-medium mb-1">Pilih Siswa</label>
+                    @php $existingIds = array_keys($existingPenilaianBySiswa ?? []); @endphp
+                    <select name="siswa_id" class="w-full rounded border px-3 py-2" required>
+                        <option value="">-- Pilih Siswa --</option>
+                        @foreach($siswaList as $s)
+                            @if(!in_array($s->id, $existingIds))
+                                <option value="{{ $s->id }}">{{ $s->nama }} ({{ $s->kelas->nama_kelas ?? '-' }})</option>
+                            @endif
+                        @endforeach
+                    </select>
+                    @if(count($siswaList) === count($existingIds))
+                        <p class="mt-2 text-xs text-zinc-500">Semua siswa pada daftar ini sudah memiliki penilaian.</p>
+                    @endif
+                </div>
+                <div class="md:col-span-2">
+                    @php 
+                        $komponen = is_array($gradeTemplate->komponen) ? $gradeTemplate->komponen : []; 
+                        // Normalize: support either
+                        // 1) mapped groups: ['Nilai Akademik' => ['kehadiran','kedisiplinan']]
+                        // 2) array of objects: [{kategori:'Nilai Akademik', subkomponen:[{uraian:'kehadiran'}, ...]}]
+                        $normalized = [];
+                        if (!empty($komponen)) {
+                            $first = reset($komponen);
+                            if (is_array($first) && array_key_exists('kategori', $first)) {
+                                foreach ($komponen as $row) {
+                                    $g = (string)($row['kategori'] ?? 'Komponen');
+                                    $subs = [];
+                                    foreach (($row['subkomponen'] ?? []) as $subRow) {
+                                        if (is_array($subRow) && isset($subRow['uraian'])) {
+                                            $subs[] = (string)$subRow['uraian'];
+                                        } elseif (is_string($subRow)) {
+                                            $subs[] = $subRow;
+                                        }
+                                    }
+                                    $normalized[$g] = $subs;
+                                }
+                            } else {
+                                // already mapped or flat list
+                                $normalized = $komponen;
+                            }
+                        }
+                    @endphp
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full border text-sm">
+                            <thead class="bg-gray-100 dark:bg-gray-900">
+                                <tr>
+                                    <th class="border px-3 py-2 text-left w-12">No</th>
+                                    <th class="border px-3 py-2 text-left">Komponen</th>
+                                    <th class="border px-3 py-2 text-right w-48">Nilai (0-100)</th>
+                                    <th class="border px-3 py-2 text-right w-36">Bobot (opsional)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @php $rowNo = 0; @endphp
+                                @if(is_array($normalized))
+                                    @foreach($normalized as $group => $items)
+                                        <tr>
+                                            <td colspan="4" class="border px-3 py-2 font-semibold bg-zinc-100 dark:bg-gray-900">{{ $group }}</td>
+                                        </tr>
+                                        @foreach((array)$items as $sub)
+                                            @php 
+                                                $rowNo++;
+                                                $labelText = trim($group.' - '.$sub);
+                                            @endphp
+                                            <tr class="odd:bg-white even:bg-zinc-50 dark:odd:bg-gray-800 dark:even:bg-gray-900">
+                                                <td class="border px-3 py-2 align-middle">{{ $rowNo }}</td>
+                                                <td class="border px-3 py-2 align-middle">{{ $sub }}</td>
+                                                <td class="border px-3 py-2 align-middle">
+                                                    <div class="flex items-center gap-2">
+                                                        <input type="number" step="0.01" min="0" max="100" name="nilai[{{ $group }}][{{ $sub }}]" data-label="{{ $labelText }}" class="nilai-field w-full rounded border px-3 py-2" placeholder="0-100" required>
+                                                        <span class="text-xs text-zinc-500">/100</span>
+                                                    </div>
+                                                </td>
+                                                <td class="border px-3 py-2 align-middle">
+                                                    <div class="flex items-center justify-end gap-2 text-xs">
+                                                        <label class="text-zinc-500">Bobot</label>
+                                                        <input type="number" step="0.01" min="0" value="1" class="bobot-field w-20 rounded border px-2 py-1" />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    @endforeach
+                                @endif
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {{-- Ringkasan & Pengaturan Hitung --}}
+                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div class="rounded border p-3">
+                            <div class="text-xs text-zinc-500">Total</div>
+                            <div id="sum-nilai" class="text-lg font-semibold">0</div>
+                        </div>
+                        <div class="rounded border p-3">
+                            <div class="text-xs text-zinc-500">Rata-rata</div>
+                            <div id="avg-nilai" class="text-lg font-semibold">0</div>
+                        </div>
+                        <div class="rounded border p-3">
+                            <div class="text-xs text-zinc-500 flex items-center gap-2">
+                                Rata-rata Berbobot
+                                <label class="inline-flex items-center gap-1 text-[11px]">
+                                    <input id="use-weight" type="checkbox" class="rounded border" />
+                                    Gunakan bobot
+                                </label>
+                            </div>
+                            <div id="weighted-avg-nilai" class="text-lg font-semibold">0</div>
+                            <div class="mt-1 text-[11px] text-zinc-500">Total Bobot: <span id="total-bobot">0</span></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 grid grid-cols-1 sm:grid-cols-4 gap-3">
+                        <div class="rounded border p-3">
+                            <div class="text-xs text-zinc-500">Ambang A (>=)</div>
+                            <input type="number" id="thr-a" class="w-full rounded border px-2 py-1 text-sm" value="90">
+                        </div>
+                        <div class="rounded border p-3">
+                            <div class="text-xs text-zinc-500">Ambang B (>=)</div>
+                            <input type="number" id="thr-b" class="w-full rounded border px-2 py-1 text-sm" value="80">
+                        </div>
+                        <div class="rounded border p-3">
+                            <div class="text-xs text-zinc-500">Ambang C (>=)</div>
+                            <input type="number" id="thr-c" class="w-full rounded border px-2 py-1 text-sm" value="70">
+                        </div>
+                        <div class="rounded border p-3">
+                            <div class="text-xs text-zinc-500">Predikat</div>
+                            <div id="grade-nilai" class="text-lg font-semibold">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-right">
+                <button type="submit" class="rounded bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700">Simpan Nilai</button>
+            </div>
+        </form>
+    </div>
+    @endif
 
     {{-- Debug Panel --}}
     <div class="mt-4 bg-yellow-50 dark:bg-yellow-900 dark:bg-opacity-20 border-2 border-yellow-300 dark:border-yellow-700 rounded-lg p-4">
@@ -127,6 +307,21 @@
                 </svg>
                 Tambah Teks
             </button>
+
+            {{-- Upload Gambar/TTD --}}
+            <div class="mb-3">
+                <input type="file" id="imageUpload" accept="image/*" class="hidden" @change="handleImageUpload($event)">
+                <button 
+                    @click="$refs.imageUpload.click()" 
+                    class="w-full bg-purple-500 hover:bg-purple-600 active:bg-purple-700 text-white px-4 py-3 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center justify-center cursor-pointer shadow hover:shadow-md"
+                >
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    Upload Gambar/TTD
+                </button>
+                <input type="file" x-ref="imageUpload" accept="image/*" class="hidden" @change="handleImageUpload($event)">
+            </div>
             
             {{-- Tambah Variabel --}}
             <div class="space-y-2">
@@ -252,6 +447,29 @@
                         </div>
                     </template>
 
+                    {{-- Edit Image Size (untuk image) --}}
+                    <template x-if="elements[selectedElement].type === 'image'">
+                        <div class="space-y-3">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-sm font-semibold mb-1 dark:text-white">Lebar:</label>
+                                    <input type="number" x-model.number="elements[selectedElement].width" 
+                                           class="w-full border-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded px-2 py-1 text-sm" 
+                                           min="20" max="500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold mb-1 dark:text-white">Tinggi:</label>
+                                    <input type="number" x-model.number="elements[selectedElement].height" 
+                                           class="w-full border-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded px-2 py-1 text-sm" 
+                                           min="20" max="500">
+                                </div>
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                <strong>File:</strong> <span x-text="elements[selectedElement].filename || 'Unknown'"></span>
+                            </div>
+                        </div>
+                    </template>
+
                     {{-- Variable Info --}}
                     <template x-if="elements[selectedElement].type === 'variable'">
                         <div class="bg-yellow-50 dark:bg-yellow-900 dark:bg-opacity-30 p-3 rounded-lg border-2 border-yellow-300 dark:border-yellow-700">
@@ -336,24 +554,37 @@
 
     </div>
 
-    {{-- Daftar Siswa --}}
+    {{-- Daftar Siswa / Custom Penerima --}}
     <div class="mt-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-5">
         <div class="flex items-center mb-4">
             <svg class="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
             </svg>
             <h3 class="font-bold text-lg dark:text-white">
-                Daftar Siswa <span class="text-blue-500" x-text="'(' + siswaList.length + ')'"></span>
+                Daftar Siswa <span class="text-blue-500" x-text="'(' + siswaList.length + ')' "></span>
             </h3>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 max-h-[300px] overflow-y-auto">
-            <template x-for="s in siswaList" :key="s.id">
-                <div class="p-3 border-2 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 rounded-lg text-sm dark:text-white transition-colors duration-200 bg-gray-50 dark:bg-gray-900">
-                    <div class="font-semibold text-gray-900 dark:text-white" x-text="s.nama"></div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1" x-text="'Kelas: ' + (s.kelas ? s.kelas.nama_kelas : '-')"></div>
-                </div>
-            </template>
+        <template x-if="siswaList.length > 0">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 max-h-[300px] overflow-y-auto">
+                <template x-for="s in siswaList" :key="s.id">
+                    <div class="p-3 border-2 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 rounded-lg text-sm dark:text-white transition-colors duration-200 bg-gray-50 dark:bg-gray-900">
+                        <div class="font-semibold text-gray-900 dark:text-white" x-text="s.nama"></div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1" x-text="'Kelas: ' + (s.kelas ? s.kelas.nama_kelas : '-')"></div>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        {{-- Custom recipients when no siswa selected --}}
+        @if($siswaList->isEmpty())
+        <div id="custom-recipients" class="mt-4">
+            <div class="flex items-center justify-between mb-2">
+                <div class="text-sm text-zinc-600 dark:text-zinc-300">Anda tidak memilih data siswa. Tambahkan penerima sertifikat manual di bawah ini.</div>
+                <button type="button" class="px-3 py-1.5 rounded bg-blue-600 text-white text-sm" onclick="addRecipientRow()">+ Sertifikat Baru</button>
+            </div>
+            <div class="space-y-3" id="recipients-list"></div>
         </div>
+        @endif
     </div>
 
 </div>
@@ -367,16 +598,19 @@ function certificateCustomizer() {
         selectedVariable: '',
         backgroundImage: '{{ asset("storage/".$template->background_image) }}',
         elementIdCounter: 1000,
+        isEditingText: false,
+        history: [],
+        future: [],
 
         variables: [
-            {name:'$nama_siswa', label:'Nama Siswa', sample:'Tegar Kurniawan'},
-            {name:'$kelas', label:'Kelas', sample:'XII RPL'},
-            {name:'$nis', label:'NIS', sample:'12345678'},
-            {name:'$tanggal', label:'Tanggal', sample:'23 Oktober 2025'},
-            {name:'$nilai', label:'Nilai', sample:'95'},
-            {name:'$peringkat', label:'Peringkat', sample:'1'},
-            {name:'$jurusan', label:'Jurusan', sample:'Rekayasa Perangkat Lunak'},
-            {name:'$ttd', label:'Tanda Tangan', sample:'(Signature)'},
+            {name:'$nama_siswa', label:'$Nama', sample:'Tegar Kurniawan'},
+            {name:'$kelas', label:'$Kelas', sample:'XII RPL'},
+            {name:'$nis', label:'$NIS', sample:'12345678'},
+            {name:'$tanggal', label:'$Tanggal', sample:'23 Oktober 2025'},
+            {name:'$nilai', label:'$Nilai', sample:'95'},
+            {name:'$peringkat', label:'$Peringkat', sample:'1'},
+            {name:'$jurusan', label:'$Jurusan', sample:'Rekayasa Perangkat Lunak'},
+            {name:'$ttd', label:'$TTD', sample:'(Signature)'},
         ],
 
         // 🔥 FIX: Initialize elements from PHP
@@ -410,6 +644,11 @@ function certificateCustomizer() {
                 this.elementIdCounter = 1;
             }
             console.log('='.repeat(60));
+
+            // Global keydown fallback if canvas had recent interaction
+            const keyHandler = (e) => this.handleKeydown(e);
+            document.addEventListener('keydown', keyHandler);
+            this.$watch('selectedElement', () => { /* keep handler alive */ });
         },
 
         addTextElement() {
@@ -448,7 +687,7 @@ function certificateCustomizer() {
                 id: this.elementIdCounter++,
                 type: 'variable',
                 variable: this.selectedVariable,
-                value: selectedVar.sample,
+                value: selectedVar.label,
                 x: 50,
                 y: 50,
                 fontSize: 20,
@@ -494,10 +733,170 @@ function certificateCustomizer() {
                     x: this.elements[idx].x,
                     y: this.elements[idx].y
                 });
+                this.pushHistory();
             };
 
             document.addEventListener('mousemove', move);
             document.addEventListener('mouseup', up);
+        },
+
+        startInlineEdit(index) {
+            if (!this.elements[index]) return;
+            if (this.elements[index].type !== 'text') return;
+            this.selectedElement = index;
+            this.isEditingText = true;
+            // Focus canvas to receive keyboard but let contenteditable handle text
+            setTimeout(() => {
+                const nodes = this.$refs.canvas.querySelectorAll('[contenteditable]');
+                if (nodes && nodes.length) {
+                    const el = nodes[nodes.length-1];
+                    // Put current text inside the element for editing
+                    el.innerText = this.elements[index].content || '';
+                    el.focus();
+                    // Move caret to end
+                    const range = document.createRange();
+                    range.selectNodeContents(el);
+                    range.collapse(false);
+                    const sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                }
+            }, 10);
+        },
+
+        finishInlineEdit(ev) {
+            if (this.selectedElement===null) return;
+            if (this.elements[this.selectedElement]?.type !== 'text') { this.isEditingText=false; return; }
+            const newText = (ev?.target?.innerText ?? '').trim();
+            this.elements[this.selectedElement].content = newText;
+            this.isEditingText = false;
+            this.pushHistory();
+        },
+
+        handleKeydown(e) {
+            // If currently editing text or an input is focused, don't handle global keys
+            const ae = document.activeElement;
+            const isInputFocus = ae && (ae.tagName==='INPUT' || ae.tagName==='TEXTAREA' || ae.isContentEditable);
+            if (this.isEditingText || isInputFocus) return;
+            if (this.selectedElement===null) {
+                // Undo/Redo should still work without selection
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase()==='z') { this.undo(); e.preventDefault(); return; }
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase()==='y') { this.redo(); e.preventDefault(); return; }
+                return;
+            }
+            const el = this.elements[this.selectedElement];
+            if (!el) return;
+            const step = e.shiftKey ? 1 : 0.5; // percent
+            let consumed = true;
+            if (e.key === 'ArrowUp') {
+                el.y = Math.max(0, el.y - step);
+            } else if (e.key === 'ArrowDown') {
+                el.y = Math.min(100, el.y + step);
+            } else if (e.key === 'ArrowLeft') {
+                el.x = Math.max(0, el.x - step);
+            } else if (e.key === 'ArrowRight') {
+                el.x = Math.min(100, el.x + step);
+            } else if (e.key === 'PageUp') {
+                el.y = Math.max(0, el.y - 5);
+            } else if (e.key === 'PageDown') {
+                el.y = Math.min(100, el.y + 5);
+            } else if (e.key === 'Home') {
+                el.x = Math.max(0, el.x - 5);
+            } else if (e.key === 'End') {
+                el.x = Math.min(100, el.x + 5);
+            } else if (e.key === 'Delete' || e.key === 'Backspace') {
+                this.deleteElement();
+            } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase()==='z') {
+                this.undo();
+            } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase()==='y') {
+                this.redo();
+            } else {
+                consumed = false;
+            }
+            if (consumed) e.preventDefault();
+            if (consumed && !['Delete','Backspace'].includes(e.key)) this.pushHistory();
+        },
+
+        // History helpers
+        snapshot() {
+            return JSON.parse(JSON.stringify({ elements: this.elements, selected: this.selectedElement }));
+        },
+        pushHistory() {
+            // Limit history size
+            this.history.push(this.snapshot());
+            if (this.history.length > 50) this.history.shift();
+            // Clear redo stack when new action occurs
+            this.future = [];
+        },
+        undo() {
+            if (this.history.length === 0) return;
+            const current = this.snapshot();
+            const prev = this.history.pop();
+            this.future.push(current);
+            this.elements = prev.elements;
+            this.selectedElement = prev.selected;
+        },
+        redo() {
+            if (this.future.length === 0) return;
+            const current = this.snapshot();
+            const next = this.future.pop();
+            this.history.push(current);
+            this.elements = next.elements;
+            this.selectedElement = next.selected;
+        },
+
+        // Image upload handler
+        handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const newElement = {
+                    id: this.elementIdCounter++,
+                    type: 'image',
+                    src: e.target.result,
+                    x: 50,
+                    y: 50,
+                    width: 100,
+                    height: 100,
+                    filename: file.name
+                };
+                this.elements.push(newElement);
+                this.selectedElement = this.elements.length - 1;
+                this.pushHistory();
+            };
+            reader.readAsDataURL(file);
+            // Clear input
+            event.target.value = '';
+        },
+
+        // Image resize handler
+        startImageResize(e, idx) {
+            if (!this.elements[idx] || this.elements[idx].type !== 'image') return;
+            this.selectedElement = idx;
+            const canvas = this.$refs.canvas;
+            const rect = canvas.getBoundingClientRect();
+            const startX = e.clientX;
+            const startY = e.clientY;
+            const startWidth = this.elements[idx].width || 100;
+            const startHeight = this.elements[idx].height || 100;
+            
+            const resize = (ev) => {
+                const deltaX = ev.clientX - startX;
+                const deltaY = ev.clientY - startY;
+                this.elements[idx].width = Math.max(20, startWidth + deltaX);
+                this.elements[idx].height = Math.max(20, startHeight + deltaY);
+            };
+
+            const stopResize = () => {
+                document.removeEventListener('mousemove', resize);
+                document.removeEventListener('mouseup', stopResize);
+                this.pushHistory();
+            };
+
+            document.addEventListener('mousemove', resize);
+            document.addEventListener('mouseup', stopResize);
         },
 
         getVariableSample(name) {
@@ -539,7 +938,9 @@ function certificateCustomizer() {
 
                 const loadingAlert = this.showNotification('Menyimpan template...', 'info');
 
-                const elementsToSave = this.elements.map(el => ({
+                const elementsToSave = this.elements
+                    .filter(el => el && el.id !== undefined && el.type)
+                    .map(el => ({
                     id: el.id,
                     type: el.type,
                     content: el.content || '',
@@ -551,7 +952,12 @@ function certificateCustomizer() {
                     fontFamily: el.fontFamily || 'Arial',
                     color: el.color || '#000000',
                     bold: !!el.bold,
-                    align: el.align || 'center'
+                    align: el.align || 'center',
+                    // Image specific fields
+                    src: el.src || '',
+                    width: parseInt(el.width) || 100,
+                    height: parseInt(el.height) || 100,
+                    filename: el.filename || ''
                 }));
 
                 console.log('📤 Payload to send:', {
@@ -643,6 +1049,57 @@ function certificateCustomizer() {
         previewCertificate() {
             const urlParams = new URLSearchParams(window.location.search);
             const kelasId = urlParams.get('kelas_id') || '';
+            // If custom recipients exist, submit a GET form with arrays
+            const list = document.getElementById('recipients-list');
+            const hasCustom = list && list.children.length > 0;
+            if (hasCustom) {
+                const form = document.createElement('form');
+                form.method = 'GET';
+                form.target = '_blank';
+                form.action = `/master/sertifikat/generate/preview/${this.templateId}`;
+                if (kelasId) {
+                    const hid = document.createElement('input');
+                    hid.type = 'hidden'; hid.name = 'kelas_id'; hid.value = kelasId; form.appendChild(hid);
+                }
+                // collect recipients
+                list.querySelectorAll('.recipient-row').forEach(row => {
+                    const fields = ['name','nis','kelas','jurusan','peringkat','tanggal'];
+                    fields.forEach(f => {
+                        const inp = row.querySelector(`[data-field="${f}"]`);
+                        if (!inp) return;
+                        const h = document.createElement('input');
+                        h.type = 'hidden';
+                        h.name = `recipients[${f}][]`;
+                        h.value = inp.value || '';
+                        form.appendChild(h);
+                    });
+                });
+                document.body.appendChild(form);
+                form.submit();
+                form.remove();
+                return;
+            }
+            // Jika tidak memilih siswa, tidak memilih kelas, dan belum menambah penerima manual,
+            // kirim 1 penerima kosong agar tetap muncul 1 sertifikat
+            if (!kelasId && (!this.siswaList || this.siswaList.length === 0)) {
+                const form = document.createElement('form');
+                form.method = 'GET';
+                form.target = '_blank';
+                form.action = `/master/sertifikat/generate/preview/${this.templateId}`;
+                const fields = ['name','nis','kelas','jurusan','peringkat','tanggal'];
+                fields.forEach(f => {
+                    const h = document.createElement('input');
+                    h.type = 'hidden';
+                    h.name = `recipients[${f}][]`;
+                    h.value = '';
+                    form.appendChild(h);
+                });
+                document.body.appendChild(form);
+                form.submit();
+                form.remove();
+                return;
+            }
+            // fallback to class/siswa-based preview
             let url = `/master/sertifikat/generate/preview/${this.templateId}`;
             if (kelasId) url += `?kelas_id=${kelasId}`;
             window.open(url, '_blank');
@@ -650,5 +1107,207 @@ function certificateCustomizer() {
     }
 }
 </script>
+
+@if($siswaList->isEmpty())
+<script>
+    // Repeater for custom recipients
+    function addRecipientRow() {
+        const c = document.getElementById('recipients-list');
+        const wrap = document.createElement('div');
+        wrap.className = 'recipient-row grid grid-cols-1 md:grid-cols-6 gap-2 p-3 border rounded';
+        wrap.innerHTML = `
+            <input data-field="name" class="rounded border px-2 py-1" placeholder="Nama">
+            <input data-field="nis" class="rounded border px-2 py-1" placeholder="NIS/NISN">
+            <input data-field="kelas" class="rounded border px-2 py-1" placeholder="Kelas">
+            <input data-field="jurusan" class="rounded border px-2 py-1" placeholder="Jurusan">
+            <input data-field="peringkat" class="rounded border px-2 py-1" placeholder="Peringkat">
+            <div class="flex items-center gap-2">
+                <input data-field="tanggal" type="date" class="rounded border px-2 py-1 w-full">
+                <button type="button" class="px-2 py-1 text-xs rounded bg-red-600 text-white" onclick="this.closest('.recipient-row').remove()">Hapus</button>
+            </div>
+        `;
+        c.appendChild(wrap);
+    }
+    // Auto tambahkan 1 baris default saat panel pertama kali dibuka dan belum ada baris
+    document.addEventListener('DOMContentLoaded', () => {
+        const list = document.getElementById('recipients-list');
+        if (list && list.children.length === 0) {
+            addRecipientRow();
+        }
+    });
+</script>
+@endif
+
+<script>
+    // Auto-calc Total, Rata-rata, Grade
+    (function() {
+        const inputs = () => Array.from(document.querySelectorAll('#form-nilai .nilai-field'));
+        const bobots = () => Array.from(document.querySelectorAll('#form-nilai .bobot-field'));
+        const sumEl = document.getElementById('sum-nilai');
+        const avgEl = document.getElementById('avg-nilai');
+        const wavgEl = document.getElementById('weighted-avg-nilai');
+        const gradeEl = document.getElementById('grade-nilai');
+        const tbobotEl = document.getElementById('total-bobot');
+        const useWeight = document.getElementById('use-weight');
+        const hfTotal = document.getElementById('hf-total');
+        const hfAvg = document.getElementById('hf-avg');
+        const hfWAvg = document.getElementById('hf-weighted-avg');
+        const hfGrade = document.getElementById('hf-grade');
+        const thrA = document.getElementById('thr-a');
+        const thrB = document.getElementById('thr-b');
+        const thrC = document.getElementById('thr-c');
+
+        function calc() {
+            const vals = inputs()
+                .map(i => parseFloat(i.value))
+                .filter(v => !isNaN(v));
+            const count = vals.length;
+            const sum = vals.reduce((a,b)=>a+b,0);
+            const avg = count ? (sum / count) : 0;
+            sumEl && (sumEl.textContent = sum.toFixed(2));
+            avgEl && (avgEl.textContent = avg.toFixed(2));
+            let weighted = 0; let totalBobot = 0;
+            if (useWeight && useWeight.checked) {
+                const valNodes = inputs();
+                const bobotNodes = bobots();
+                for (let i=0; i<valNodes.length; i++) {
+                    const v = parseFloat(valNodes[i].value);
+                    const w = parseFloat(bobotNodes[i]?.value || '0');
+                    if (!isNaN(v) && !isNaN(w)) { weighted += v * w; totalBobot += w; }
+                }
+            }
+            const wavg = (useWeight && useWeight.checked && totalBobot>0) ? (weighted/totalBobot) : avg;
+            wavgEl && (wavgEl.textContent = wavg.toFixed(2));
+            tbobotEl && (tbobotEl.textContent = totalBobot.toFixed(2));
+            const letter = toLetter(wavg);
+            gradeEl && (gradeEl.textContent = letter);
+            // set hidden fields
+            if (hfTotal) hfTotal.value = sum.toFixed(2);
+            if (hfAvg) hfAvg.value = avg.toFixed(2);
+            if (hfWAvg) hfWAvg.value = wavg.toFixed(2);
+            if (hfGrade) hfGrade.value = letter;
+        }
+        function toLetter(score) {
+            const a = parseFloat(thrA?.value || '90');
+            const b = parseFloat(thrB?.value || '80');
+            const c = parseFloat(thrC?.value || '70');
+            if (score >= a) return 'A';
+            if (score >= b) return 'B';
+            if (score >= c) return 'C';
+            if (score >= 60) return 'D';
+            return 'E';
+        }
+        document.addEventListener('input', (e) => {
+            if (!e.target) return;
+            if (e.target.classList.contains('nilai-field') || e.target.classList.contains('bobot-field')) calc();
+            if (['thr-a','thr-b','thr-c','use-weight'].includes(e.target.id)) calc();
+        });
+        document.addEventListener('DOMContentLoaded', calc);
+        calc();
+    })();
+</script>
+
+@if(!empty($gradeTemplateId) && $gradeTemplate)
+    {{-- Data Nilai Saat Ini --}}
+    <div class="mt-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-5">
+        <div class="flex items-center mb-4">
+            <svg class="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c.638 0 1.246.12 1.803.338l2.574-2.574A9 9 0 103 12h3a6 6 0 116 6v3a9 9 0 000-18z" />
+            </svg>
+            <h3 class="font-bold text-lg dark:text-white">Data Nilai Saat Ini</h3>
+        </div>
+        @php $map = $existingPenilaianBySiswa ?? []; @endphp
+        @if(!empty($map))
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                @foreach($siswaList as $s)
+                    @php $d = $map[$s->id] ?? null; @endphp
+                    <div class="p-3 rounded border bg-zinc-50 dark:bg-zinc-900">
+                        <div class="font-semibold text-sm mb-1">{{ $s->nama }}</div>
+                        @if($d)
+                        @php $nilai = is_array($d) ? ($d['nilai'] ?? []) : (json_decode($d, true)['nilai'] ?? []);
+                             $cmp = is_array($d) ? ($d['computed'] ?? []) : (json_decode($d, true)['computed'] ?? []);
+                        @endphp
+                        <table class="w-full text-xs">
+                            <thead>
+                                <tr class="text-zinc-500">
+                                    <th class="text-left py-1 pr-2">Komponen</th>
+                                    <th class="text-right py-1">Nilai</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach(($nilai ?? []) as $k=>$v)
+                                    @if(is_array($v))
+                                        <tr>
+                                            <td class="py-0.5 pr-2 font-semibold" colspan="2">{{ $k }}</td>
+                                        </tr>
+                                        @foreach($v as $subKey=>$subVal)
+                                            <tr>
+                                                <td class="py-0.5 pr-2 pl-3">{{ is_string($subKey) ? $subKey : $subVal }}</td>
+                                                <td class="text-right py-0.5">{{ is_numeric($subVal)?number_format($subVal,2):$subVal }}</td>
+                                            </tr>
+                                        @endforeach
+                                    @else
+                                        <tr>
+                                            <td class="py-0.5 pr-2">{{ $k }}</td>
+                                            <td class="text-right py-0.5">{{ is_numeric($v)?number_format($v,2):$v }}</td>
+                                        </tr>
+                                    @endif
+                                @endforeach
+                            </tbody>
+                        </table>
+                        <div class="mt-2 text-[11px] text-zinc-600">
+                            <div>Total: <span class="font-semibold">{{ $cmp['total'] ?? '-' }}</span></div>
+                            <div>Rata-rata: <span class="font-semibold">{{ $cmp['avg'] ?? '-' }}</span></div>
+                            <div>Rata-rata berbobot: <span class="font-semibold">{{ $cmp['weighted_avg'] ?? '-' }}</span></div>
+                            <div>Predikat: <span class="font-semibold">{{ $cmp['grade'] ?? '-' }}</span></div>
+                        </div>
+                        @else
+                            <div class="text-xs text-zinc-500">Belum ada nilai.</div>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <div class="text-sm text-zinc-500">Belum ada penilaian yang tersimpan untuk template ini.</div>
+        @endif
+    </div>
+
+    <script>
+        // Prefill nilai saat pilih siswa, dari existingPenilaianBySiswa
+        (function() {
+            const existing = @json($existingPenilaianBySiswa ?? []);
+            const siswaSelect = document.querySelector('#form-nilai select[name="siswa_id"]');
+            if (!siswaSelect) return;
+
+            function prefill() {
+                const id = siswaSelect.value;
+                if (!id || !existing[id]) return;
+                let data = existing[id];
+                if (typeof data === 'string') {
+                    try { data = JSON.parse(data); } catch(e) { data = {}; }
+                }
+                const nilai = data?.nilai || {};
+                for (const [k,v] of Object.entries(nilai)) {
+                    const input = document.querySelector(`#form-nilai input[name="nilai[${k}]"]`);
+                    if (input) input.value = v;
+                }
+                // computed prefill to hidden and summary UI
+                const cmp = data?.computed || {};
+                if (document.getElementById('hf-total')) document.getElementById('hf-total').value = cmp.total ?? '';
+                if (document.getElementById('hf-avg')) document.getElementById('hf-avg').value = cmp.avg ?? '';
+                if (document.getElementById('hf-weighted-avg')) document.getElementById('hf-weighted-avg').value = cmp.weighted_avg ?? '';
+                if (document.getElementById('hf-grade')) document.getElementById('hf-grade').value = cmp.grade ?? '';
+                if (document.getElementById('sum-nilai')) document.getElementById('sum-nilai').textContent = cmp.total ?? '0';
+                if (document.getElementById('avg-nilai')) document.getElementById('avg-nilai').textContent = cmp.avg ?? '0';
+                if (document.getElementById('weighted-avg-nilai')) document.getElementById('weighted-avg-nilai').textContent = cmp.weighted_avg ?? '0';
+                if (document.getElementById('grade-nilai')) document.getElementById('grade-nilai').textContent = cmp.grade ?? '-';
+            }
+
+            siswaSelect.addEventListener('change', prefill);
+            // prefill on load if a value preselected
+            if (siswaSelect.value) prefill();
+        })();
+    </script>
+@endif
 
 </x-layouts.app>

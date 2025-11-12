@@ -11,13 +11,32 @@ use Illuminate\Http\Request;
 
 class KelasController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $q = trim((string) $request->query('q', ''));
         $kelas = Kelas::with(['jurusan', 'waliKelas'])
+                        ->when($q !== '', function ($query) use ($q) {
+                            $terms = preg_split('/\s+/', $q);
+                            $query->where(function ($outer) use ($terms) {
+                                foreach ($terms as $term) {
+                                    if ($term === '') continue;
+                                    $outer->where(function ($sub) use ($term) {
+                                        $sub->where('nama_kelas', 'like', "%{$term}%")
+                                            ->orWhereHas('jurusan', function($j) use ($term) {
+                                                $j->where('nama_jurusan', 'like', "%{$term}%");
+                                            })
+                                            ->orWhereHas('waliKelas', function($w) use ($term) {
+                                                $w->where('name', 'like', "%{$term}%");
+                                            });
+                                    });
+                                }
+                            });
+                        })
                         ->latest()
-                        ->paginate(10);
+                        ->paginate(10)
+                        ->appends(['q' => $q]);
 
-        return view('master.kelas.index', compact('kelas'));
+        return view('master.kelas.index', compact('kelas', 'q'));
     }
 
     public function customize(Request $request, $templateId)

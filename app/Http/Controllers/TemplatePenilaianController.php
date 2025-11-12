@@ -13,7 +13,9 @@ class TemplatePenilaianController extends Controller
      */
     public function index()
     {
-        $template = TemplatePenilaian::with('user')->get();
+        $template = TemplatePenilaian::with('user')
+            ->visibleFor(Auth::user())
+            ->get();
         return view('master.nilai.index', compact('template'));
     }
 
@@ -34,6 +36,7 @@ class TemplatePenilaianController extends Controller
             'nama_template' => 'required|string|max:100',
             'deskripsi' => 'nullable|string',
             'komponen' => 'nullable|array',
+            'visibility' => 'nullable|in:admin,all',
         ]);
 
         TemplatePenilaian::create([
@@ -41,6 +44,7 @@ class TemplatePenilaianController extends Controller
             'deskripsi' => $request->deskripsi,
             'komponen' => $request->komponen,
             'created_by' => Auth::id(),
+            'visibility' => $request->input('visibility', 'all'),
         ]);
 
         return redirect()->route('master.penilaian')->with('success', 'Template berhasil dibuat');
@@ -64,6 +68,7 @@ class TemplatePenilaianController extends Controller
             'nama_template' => 'required|string|max:100',
             'deskripsi' => 'nullable|string',
             'komponen' => 'nullable|array',
+            'visibility' => 'nullable|in:admin,all',
         ]);
 
         $template = TemplatePenilaian::findOrFail($id);
@@ -71,6 +76,7 @@ class TemplatePenilaianController extends Controller
             'nama_template' => $request->nama_template,
             'deskripsi' => $request->deskripsi,
             'komponen' => $request->komponen,
+            'visibility' => $request->input('visibility', 'all'),
         ]);
 
         return redirect()->route('master.penilaian')->with('success', 'Template berhasil diupdate');

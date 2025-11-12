@@ -37,6 +37,18 @@
                     </button>
                 </div>
 
+                {{-- Visibilitas Template --}}
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-1">Visibilitas Template</label>
+                    <select name="visibility" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring">
+                        <option value="all" selected>Semua (Admin dan Guru)</option>
+                        <option value="admin">Admin saja</option>
+                    </select>
+                    @error('visibility')
+                        <p class="text-red-500 text-sm">{{ $message }}</p>
+                    @enderror
+                </div>
+
                 {{-- Tombol --}}
                 <div class="flex justify-end gap-3 mt-6">
                     <a href="{{ route('master.penilaian') }}"

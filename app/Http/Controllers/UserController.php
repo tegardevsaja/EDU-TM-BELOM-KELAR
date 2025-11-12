@@ -24,7 +24,8 @@ class UserController extends Controller
     public function edit($id)
 {
     $user = User::findOrFail($id);
-    return view('master.users.edit', compact('user'));
+    $roles = ['master_admin', 'admin', 'guru'];
+    return view('master.users.edit', compact('user', 'roles'));
 }
 
         public function update(Request $request, $id)
@@ -37,7 +38,19 @@ class UserController extends Controller
                 'role'  => 'required|string',
             ]);
 
-            $user->update($validated);
+            $user->update([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'role' => $validated['role'],
+            ]);
+
+            // Sync Spatie role with enum/string role column so @role/@can works
+            if (method_exists($user, 'syncRoles')) {
+                $user->syncRoles([$validated['role']]);
+            }
+
+            // Clear Spatie permission cache
+            app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 
             return redirect()->route('master.users')->with('success', 'Data berhasil diperbarui!');
         }

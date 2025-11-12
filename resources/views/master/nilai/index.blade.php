@@ -1,16 +1,7 @@
 <x-layouts.app :title="__('Template Penilaian')">
-    <div class="flex justify-between items-center mb-6">
-        <h2 class="text-xl font-semibold">Template Penilaian</h2>
-        <a href="{{ route('master.penilaian.create') }}"
-           class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
-           + Tambah Template
-        </a>
-
-        <a href="{{ route('master.penilaian.create') }}" 
-   class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-   Tambah Template 2
-</a>
-
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-semibold">Template Penilaian</h2>
+        <x-ui.button :href="route('master.penilaian.create')" variant="primary" size="md">+ Tambah Template</x-ui.button>
     </div>
 
     @if($template->isEmpty())
@@ -18,9 +9,9 @@
             Belum ada template penilaian.
         </div>
     @else
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             @foreach ($template as $index => $item)
-                <div class="border rounded-xl shadow-sm hover:shadow-md transition bg-white dark:bg-zinc-800 p-5">
+                <div class="border rounded-lg shadow-sm hover:shadow-md transition bg-white dark:bg-zinc-800 p-5">
                     {{-- Header --}}
                     <div class="flex justify-between items-start mb-3">
                         <div>
@@ -64,21 +55,12 @@
                     </div>
 
                     {{-- Aksi --}}
-                    <div class="flex justify-end gap-3 mt-5 pt-3 border-t">
-                        <a href="{{ route('master.penilaian.edit', $item->id) }}"
-                           class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                            Edit
-                        </a>
-                        <form action="{{ route('master.penilaian.destroy', $item->id) }}"
-                              method="POST"
-                              onsubmit="return confirm('Yakin ingin menghapus template ini?')"
-                              class="inline">
+                    <div class="flex justify-end gap-2 mt-5 pt-3 border-t">
+                        <x-ui.button :href="route('master.penilaian.edit', $item->id)" variant="secondary" size="sm">Edit</x-ui.button>
+                        <form action="{{ route('master.penilaian.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus template ini?')" class="inline">
                             @csrf
                             @method('DELETE')
-                            <button type="submit"
-                                class="text-red-600 hover:text-red-800 text-sm font-medium">
-                                Hapus
-                            </button>
+                            <x-ui.button type="submit" variant="danger" size="sm">Hapus</x-ui.button>
                         </form>
                     </div>
                 </div>

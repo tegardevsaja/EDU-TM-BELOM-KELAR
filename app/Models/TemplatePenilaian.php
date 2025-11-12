@@ -16,6 +16,7 @@ class TemplatePenilaian extends Model
         'deskripsi',
         'komponen',
         'created_by',
+        'visibility',
     ];
 
     protected $casts = [
@@ -35,5 +36,13 @@ class TemplatePenilaian extends Model
        public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function scopeVisibleFor($query, $user)
+    {
+        if (method_exists($user, 'hasRole') && ($user->hasRole('master_admin') || $user->hasRole('admin'))) {
+            return $query;
+        }
+        return $query->where('visibility', 'all');
     }
 }

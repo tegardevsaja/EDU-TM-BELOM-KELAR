@@ -1,9 +1,31 @@
+@php
+    $routePrefix = 'master'; // default
+    if (auth()->check() && method_exists(auth()->user(), 'hasRole')) {
+        if (auth()->user()->hasRole('master_admin')) {
+            $routePrefix = 'master';
+        } elseif (auth()->user()->hasRole('admin')) {
+            $routePrefix = 'admin';
+        } elseif (auth()->user()->hasRole('guru')) {
+            $routePrefix = 'guru';
+        }
+    }
+@endphp
+
 <x-layouts.app :title="__('Master Admin Dashboard')">
-   <p>jurusan page</p>
+   {{-- Search Bar --}}
+   <form method="GET" action="{{ route($routePrefix . '.jurusan') }}" class="mb-3 flex gap-2 items-center">
+        <input type="text" name="q" value="{{ $q ?? '' }}" placeholder="Cari nama jurusan..." class="border rounded-lg px-3 py-2 w-full max-w-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+        <x-ui.button type="submit" variant="primary" size="md">Cari</x-ui.button>
+        @if(!empty($q))
+            <x-ui.button :href="route($routePrefix . '.jurusan')" variant="secondary" size="md">Reset</x-ui.button>
+        @endif
+   </form>
    <div class="flex justify-end">
+    @can('jurusan.create')
     <div>
-        <a href="{{route('master.jurusan.create')}}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-400 focus:outline-none transition">Tambah Jurusan</a>
+        <x-ui.button :href="route($routePrefix . '.jurusan.create')" variant="primary" size="md">Tambah Jurusan</x-ui.button>
     </div>
+    @endcan
    </div>
    <div>
     <table class="min-w-full text-sm text-left">
@@ -20,14 +42,18 @@
                 <td class="py-3 px-4">{{ $loop->iteration }}</td>
                 <td class="py-3 px-4">{{ $item->nama_jurusan}}</td>
                 <td class="py-3 px-4 flex items-center gap-3">
-                            <a href="{{ route('master.jurusan.edit', $item->id) }}"
-                                class="text-blue-600 hover:underline">Edit</a>
-                            <form action="{{ route('master.jurusan.destroy', $item->id) }}" method="POST"
+                            @can('jurusan.update')
+                            <x-ui.button :href="route($routePrefix . '.jurusan.edit', $item->id)" variant="secondary" size="sm">Edit</x-ui.button>
+                            @endcan
+                            
+                            @can('jurusan.delete')
+                            <form action="{{ route($routePrefix . '.jurusan.destroy', $item->id) }}" method="POST"
                                 onsubmit="return confirm('Yakin ingin menghapus data ini?')" class="inline">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="text-red-600 hover:underline">Hapus</button>
+                                <x-ui.button type="submit" variant="danger" size="sm">Hapus</x-ui.button>
                             </form>
+                            @endcan
                         </td>
             </tr>
                @empty

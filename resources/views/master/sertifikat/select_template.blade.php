@@ -1,7 +1,7 @@
 <x-layouts.app :title="'Pilih Template Sertifikat'">
     <h2 class="text-xl font-semibold mb-6 dark:text-white">Pilih Template Sertifikat</h2>
 
-    <form action="{{ route('master.sertifikat.select_grade', 'TEMPLATE_ID') }}" method="GET" id="templateForm">
+    <form action="{{ route('master.sertifikat.select_students', 'TEMPLATE_ID') }}" method="GET" id="templateForm">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             @foreach ($templates as $template)
                 <label class="template-item p-4 bg-white dark:bg-gray-800 rounded shadow cursor-pointer border border-transparent hover:border-purple-400 transition"

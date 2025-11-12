@@ -7,7 +7,7 @@
             <div class="bg-green-100 text-green-800 p-2 rounded mb-4">{{ session('success') }}</div>
         @endif
 
-        <form action="{{ route('penilaian.store', $template->id) }}" method="POST">
+        <form action="{{ route('master.penilaian.store', $template->id) }}" method="POST">
             @csrf
 
             <!-- Pilih siswa -->
@@ -48,6 +48,15 @@
                         @endforeach
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Visibilitas -->
+            <div class="mt-4">
+                <label class="block font-semibold mb-1">Visibilitas</label>
+                <select name="visibility" class="border rounded p-2 w-full">
+                    <option value="all" selected>Semua (Admin dan Guru)</option>
+                    <option value="admin">Admin saja</option>
+                </select>
             </div>
 
             <button type="submit" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">

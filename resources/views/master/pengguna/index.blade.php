@@ -1,26 +1,47 @@
-<x-layouts.app :title="__('Master Admin Dashboard')">
-    <div class="flex justify-end mb-4 gap-2">
-        <a href="{{ route('master.pengguna.create') }}"
-            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-400 focus:outline-none transition">
-            + Tambah
-        </a>
-        <a href="{{ route('master.pengguna.export') }}"
-       class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition">
-       Export Excel
-    </a>
-        <a href="{{ route('master.pengguna.template') }}" class="btn btn-secondary">Download Template Excel</a>
+@php
+    $routePrefix = 'master'; // default
+    if (auth()->check() && method_exists(auth()->user(), 'hasRole')) {
+        if (auth()->user()->hasRole('master_admin')) {
+            $routePrefix = 'master';
+        } elseif (auth()->user()->hasRole('admin')) {
+            $routePrefix = 'admin';
+        } elseif (auth()->user()->hasRole('guru')) {
+            $routePrefix = 'guru';
+        }
+    }
+@endphp
 
+<x-layouts.app :title="__('Master Admin Dashboard')">
+    {{-- Search Bar --}}
+    <form method="GET" action="{{ route($routePrefix . '.pengguna') }}" class="mb-3 flex gap-2 items-center">
+        <input type="text" name="q" value="{{ $q ?? '' }}" placeholder="Cari nama, email, atau NIK..." class="border rounded-lg px-3 py-2 w-full max-w-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+        <x-ui.button type="submit" variant="primary" size="md">Cari</x-ui.button>
+        @if(!empty($q))
+            <x-ui.button :href="route($routePrefix . '.pengguna')" variant="secondary" size="md">Reset</x-ui.button>
+        @endif
+    </form>
+
+    <div class="flex justify-end mb-4 gap-2">
+        @can('pengguna.create')
+        <x-ui.button :href="route($routePrefix . '.pengguna.create')" variant="primary" size="md">+ Tambah</x-ui.button>
+        @endcan
+        
+        @can('pengguna.export')
+        <x-ui.button :href="route($routePrefix . '.pengguna.export')" variant="success" size="md">Export Excel</x-ui.button>
+        @endcan
+        
+        @can('pengguna.template')
+        <x-ui.button :href="route($routePrefix . '.pengguna.template')" variant="secondary" size="md">Download Template Excel</x-ui.button>
+        @endcan
     </div>
 
-    <form action="{{ route('master.pengguna.import') }}" method="POST" enctype="multipart/form-data" class="flex items-center gap-2 mb-4">
+    @can('pengguna.import')
+    <form action="{{ route($routePrefix . '.pengguna.import') }}" method="POST" enctype="multipart/form-data" class="flex items-center gap-2 mb-4">
     @csrf
-    <input type="file" name="file" accept=".xlsx, .xls" required
-        class="border border-gray-300 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500">
-    <button type="submit"
-        class="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition">
-        Import Excel
-    </button>
+    <input type="file" name="file" accept=".xlsx, .xls" required class="border border-gray-300 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500">
+    <x-ui.button type="submit" variant="success" size="md">Import Excel</x-ui.button>
 </form>
+    @endcan
 
 
     <div class="bg-white shadow-sm rounded-xl overflow-hidden">
@@ -42,14 +63,18 @@
                         <td class="py-3 px-4">{{ $item->email }}</td>
                         <td class="py-3 px-4">{{ $item->nik }}</td>
                         <td class="py-3 px-4 flex items-center gap-3">
-                            <a href="{{ route('master.pengguna.edit', $item->id) }}"
-                                class="text-blue-600 hover:underline">Edit</a>
-                            <form action="{{ route('master.pengguna.destroy', $item->id) }}" method="POST"
+                            @can('pengguna.update')
+                            <x-ui.button :href="route($routePrefix . '.pengguna.edit', $item->id)" variant="secondary" size="sm">Edit</x-ui.button>
+                            @endcan
+                            
+                            @can('pengguna.delete')
+                            <form action="{{ route($routePrefix . '.pengguna.destroy', $item->id) }}" method="POST"
                                 onsubmit="return confirm('Yakin ingin menghapus data ini?')" class="inline">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="text-red-600 hover:underline">Hapus</button>
+                                <x-ui.button type="submit" variant="danger" size="sm">Hapus</x-ui.button>
                             </form>
+                            @endcan
                         </td>
                     </tr>
                 @empty

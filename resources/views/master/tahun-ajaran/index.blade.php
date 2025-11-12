@@ -1,11 +1,26 @@
+@php
+    $routePrefix = 'master'; // default
+    if (auth()->check() && method_exists(auth()->user(), 'hasRole')) {
+        if (auth()->user()->hasRole('master_admin')) {
+            $routePrefix = 'master';
+        } elseif (auth()->user()->hasRole('admin')) {
+            $routePrefix = 'admin';
+        } elseif (auth()->user()->hasRole('guru')) {
+            $routePrefix = 'guru';
+        }
+    }
+@endphp
+
 <x-layouts.app :title="__('Tahun Ajaran')">
     <div class="p-6 bg-white dark:bg-zinc-800">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-lg font-semibold">Daftar Tahun Ajaran</h2>
-            <a href="{{ route('master.tahun-ajaran.create') }}"
+            @can('tahunAjaran.create')
+            <a href="{{ route($routePrefix . '.tahun-ajaran.create') }}"
                class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                 + Tambah Tahun Ajaran
             </a>
+            @endcan
         </div>
 
         @if(session('success'))
@@ -39,11 +54,15 @@
                             @endif
                         </td>
                         <td class="py-3 px-4 flex items-center gap-3">
-                            <a href="{{ route('master.tahun-ajaran.edit', $item->id) }}"
+                            @can('tahunAjaran.update')
+                            <a href="{{ route($routePrefix . '.tahun-ajaran.edit', $item->id) }}"
                                class="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600">
                                 Edit
                             </a>
-                            <form action="{{ route('master.tahun-ajaran.destroy', $item->id) }}" method="POST" class="inline-block"
+                            @endcan
+                            
+                            @can('tahunAjaran.delete')
+                            <form action="{{ route($routePrefix . '.tahun-ajaran.destroy', $item->id) }}" method="POST" class="inline-block"
                                   onsubmit="return confirm('Yakin hapus data ini?')">
                                 @csrf
                                 @method('DELETE')
@@ -51,6 +70,7 @@
                                     Hapus
                                 </button>
                             </form>
+                            @endcan
                         </td>
                     </tr>
                 @empty

@@ -9,12 +9,24 @@ use Illuminate\Http\RedirectResponse;
 
 class JurusanController extends Controller
 {
-    public function index() : View
+    public function index(Request $request) : View
     {
-        $jurusan = Jurusan::latest()->paginate(10);
+        $q = trim((string) $request->query('q', ''));
+        $jurusan = Jurusan::query()
+            ->when($q !== '', function($query) use ($q) {
+                $terms = preg_split('/\s+/', $q);
+                $query->where(function($outer) use ($terms) {
+                    foreach ($terms as $term) {
+                        if ($term === '') continue;
+                        $outer->where('nama_jurusan', 'like', "%{$term}%");
+                    }
+                });
+            })
+            ->latest()
+            ->paginate(10)
+            ->appends(['q' => $q]);
 
-        return view('master.jurusan.index', compact('jurusan'));
-        
+        return view('master.jurusan.index', compact('jurusan', 'q'));
     }
 
     public function create(): View

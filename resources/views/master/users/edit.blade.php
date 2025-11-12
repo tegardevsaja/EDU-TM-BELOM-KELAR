@@ -19,6 +19,18 @@
                value="{{ old('email', $user->email) }}" required>
     </div>
 
+    <!-- Role -->
+    <div class="mb-3">
+        <label for="role" class="form-label">Role</label>
+        <select name="role" id="role" class="form-control" required>
+            @foreach($roles as $role)
+                <option value="{{ $role }}" {{ old('role', ($user->role->value ?? $user->role)) === $role ? 'selected' : '' }}>
+                    {{ $role }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+
     <!-- Password Baru (Opsional) -->
     <div class="mb-3">
         <label for="password" class="form-label">Password Baru (opsional)</label>

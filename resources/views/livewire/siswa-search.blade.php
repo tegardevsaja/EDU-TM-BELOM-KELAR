@@ -1,3 +1,16 @@
+@php
+    $routePrefix = 'master'; // default
+    if (auth()->check() && method_exists(auth()->user(), 'hasRole')) {
+        if (auth()->user()->hasRole('master_admin')) {
+            $routePrefix = 'master';
+        } elseif (auth()->user()->hasRole('admin')) {
+            $routePrefix = 'admin';
+        } elseif (auth()->user()->hasRole('guru')) {
+            $routePrefix = 'guru';
+        }
+    }
+@endphp
+
 <div class="mt-4">
     <!-- Input Search dengan tombol Clear (X) -->
     <div class="relative mb-3">
@@ -54,10 +67,13 @@
                     <td class="py-2 px-3">{{ $swa->kelas->nama_kelas ?? '-' }}</td>
                     <td class="py-2 px-3">{{ $swa->jurusan->nama_jurusan ?? '-' }}</td>
                     <td class="py-3 px-4 flex items-center gap-3">
-                        <a href="{{ route('master.siswa.edit', $swa->id) }}"
+                        @can('siswa.update')
+                        <a href="{{ route($routePrefix . '.siswa.edit', $swa->id) }}"
                            class="text-blue-600 hover:underline">Edit</a>
+                        @endcan
                         
-                        <form action="{{ route('master.siswa.destroy', $swa->id) }}"
+                        @can('siswa.delete')
+                        <form action="{{ route($routePrefix . '.siswa.destroy', $swa->id) }}"
                               method="POST"
                               onsubmit="return confirm('Yakin ingin menghapus data ini?')"
                               class="inline">
@@ -68,6 +84,7 @@
                                 Hapus
                             </button>
                         </form>
+                        @endcan
                     </td>
                 </tr>
             @empty

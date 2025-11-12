@@ -1,4 +1,17 @@
 {{-- resources/views/master/sertifikat/index.blade.php --}}
+@php
+    $routePrefix = 'master'; // default
+    if (auth()->check() && method_exists(auth()->user(), 'hasRole')) {
+        if (auth()->user()->hasRole('master_admin')) {
+            $routePrefix = 'master';
+        } elseif (auth()->user()->hasRole('admin')) {
+            $routePrefix = 'admin';
+        } elseif (auth()->user()->hasRole('guru')) {
+            $routePrefix = 'guru';
+        }
+    }
+@endphp
+
 <x-layouts.app :title="'Template Sertifikat'">
     <div class="min-h-screen bg-gray-50">
         <div class="max-w-7xl mx-auto p-6">
@@ -12,20 +25,25 @@
                         <p class="text-gray-600">Kelola template dan cetak sertifikat dengan mudah</p>
                     </div>
                     <div class="flex gap-3">
-                        <a href="{{ route('master.sertifikat.select_template') }}" 
+                        @can('sertifikat.view')
+                        <a href="{{ route($routePrefix . '.sertifikat.select_template') }}" 
                            class="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 hover:border-gray-400 transition-all shadow-sm flex items-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
                             </svg>
                             Cetak Sertifikat
                         </a>
-                        <a href="{{ route('master.sertifikat.create') }}" 
+                        @endcan
+                        
+                        @can('sertifikat.create')
+                        <a href="{{ route($routePrefix . '.sertifikat.create') }}" 
                            class="px-5 py-2.5 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-all shadow-sm flex items-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                             </svg>
                             Tambah Template
                         </a>
+                        @endcan
                     </div>
                 </div>
             </div>
@@ -70,7 +88,7 @@
                         </div>
                         <div class="bg-gray-100 p-3 rounded-lg">
                             <svg class="w-6 h-6 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                             </svg>
                         </div>
                     </div>
@@ -130,6 +148,7 @@
 
                             {{-- Action Buttons --}}
                             <div class="flex gap-2">
+                                @can('sertifikat.view')
                                 <button onclick="previewTemplate('{{ asset('storage/'.$item->background_image) }}', '{{ $item->nama_template }}')" 
                                         class="flex-1 bg-gray-50 text-gray-700 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors font-medium text-sm flex items-center justify-center gap-1 border border-gray-200">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,16 +157,20 @@
                                     </svg>
                                     <span>Preview</span>
                                 </button>
+                                @endcan
                                 
-                                <a href="{{ route('master.sertifikat.edit', $item->id) }}" 
+                                @can('sertifikat.update')
+                                <a href="{{ route($routePrefix . '.sertifikat.edit', $item->id) }}" 
                                    class="flex-1 bg-gray-50 text-gray-700 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors font-medium text-sm flex items-center justify-center gap-1 border border-gray-200">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
                                     <span>Edit</span>
                                 </a>
+                                @endcan
                                 
-                                <form action="{{ route('master.sertifikat.destroy', $item->id) }}" 
+                                @can('sertifikat.delete')
+                                <form action="{{ route($routePrefix . '.sertifikat.destroy', $item->id) }}" 
                                       method="POST" 
                                       onsubmit="return confirm('Yakin ingin menghapus template ini?')" 
                                       class="inline">
@@ -160,6 +183,7 @@
                                         </svg>
                                     </button>
                                 </form>
+                                @endcan
                             </div>
                         </div>
                     </div>
@@ -177,13 +201,15 @@
                     </div>
                     <h3 class="text-2xl font-bold text-gray-900 mb-2">Belum Ada Template</h3>
                     <p class="text-gray-600 mb-8">Mulai dengan menambahkan template sertifikat pertama Anda</p>
-                    <a href="{{ route('master.sertifikat.create') }}" 
+                    @can('sertifikat.create')
+                    <a href="{{ route($routePrefix . '.sertifikat.create') }}" 
                        class="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-all shadow-sm">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                         </svg>
                         Tambah Template Pertama
                     </a>
+                    @endcan
                 </div>
             </div>
             @endif

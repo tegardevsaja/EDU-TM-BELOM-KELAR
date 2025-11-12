@@ -1,18 +1,18 @@
-<x-layouts.app.admin :title="__('Master Admin Dashboard')">
+<x-layouts.admin :title="__('Master Admin Dashboard')">
     <div class="flex justify-end mb-4 gap-2">
-        <a href="{{ route('master.pengguna.create') }}"
+        <a href="{{ route('admin.pengguna.create') }}"
             class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-400 focus:outline-none transition">
             + Tambah
         </a>
-        <a href="{{ route('master.pengguna.export') }}"
+        <a href="{{ route('admin.pengguna.export') }}"
        class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition">
        Export Excel
     </a>
-        <a href="{{ route('master.pengguna.template') }}" class="btn btn-secondary">Download Template Excel</a>
+        <a href="{{ route('admin.pengguna.template') }}" class="btn btn-secondary">Download Template Excel</a>
 
     </div>
 
-    <form action="{{ route('master.pengguna.import') }}" method="POST" enctype="multipart/form-data" class="flex items-center gap-2 mb-4">
+    <form action="{{ route('admin.pengguna.import') }}" method="POST" enctype="multipart/form-data" class="flex items-center gap-2 mb-4">
     @csrf
     <input type="file" name="file" accept=".xlsx, .xls" required
         class="border border-gray-300 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500">
@@ -42,9 +42,9 @@
                         <td class="py-3 px-4">{{ $item->email }}</td>
                         <td class="py-3 px-4">{{ $item->nik }}</td>
                         <td class="py-3 px-4 flex items-center gap-3">
-                            <a href="{{ route('master.pengguna.edit', $item->id) }}"
+                            <a href="{{ route('admin.pengguna.edit', $item->id) }}"
                                 class="text-blue-600 hover:underline">Edit</a>
-                            <form action="{{ route('master.pengguna.destroy', $item->id) }}" method="POST"
+                            <form action="{{ route('admin.pengguna.destroy', $item->id) }}" method="POST"
                                 onsubmit="return confirm('Yakin ingin menghapus data ini?')" class="inline">
                                 @csrf
                                 @method('DELETE')
@@ -65,4 +65,4 @@
         {{ $pengguna->links() }}
     </div>
     </div>
-</x-layouts.app>
+</x-layouts.admin>
