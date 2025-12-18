@@ -82,8 +82,10 @@
             <div class="mb-6">
                 <label class="block text-sm font-medium mb-1">Visibilitas Template</label>
                 <select name="visibility" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring">
-                    <option value="all" {{ old('visibility', $template->visibility ?? 'all') === 'all' ? 'selected' : '' }}>Semua (Admin dan Guru)</option>
-                    <option value="admin" {{ old('visibility', $template->visibility ?? 'all') === 'admin' ? 'selected' : '' }}>Admin saja</option>
+                    @php $vis = old('visibility', $template->visibility ?? 'all'); @endphp
+                    <option value="all"  {{ $vis === 'all'  ? 'selected' : '' }}>Semua</option>
+                    <option value="guru" {{ $vis === 'guru' ? 'selected' : '' }}>Hanya Guru</option>
+                    <option value="admin"{{ $vis === 'admin'? 'selected' : '' }}>Hanya Admin</option>
                 </select>
                 @error('visibility')
                     <p class="text-red-500 text-sm">{{ $message }}</p>

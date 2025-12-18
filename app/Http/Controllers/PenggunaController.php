@@ -55,13 +55,16 @@ class PenggunaController extends Controller
         $validated = $request->validate([
             'nama'  => 'required|string|max:100',
             'email' => 'required|email|unique:penggunas,email',
-            'nik'   => 'nullable|string|max:30',
+            'nik'   => 'nullable|digits_between:8,30',
+            'status' => 'nullable|in:aktif,nonaktif',
         ]);
+
+        $validated['status'] = $validated['status'] ?? 'aktif';
 
         Pengguna::create($validated);
 
         return redirect()
-            ->route('pengguna.index')
+            ->route('master.pengguna')
             ->with('success', 'Data pengguna berhasil disimpan!');
     }
 
@@ -84,13 +87,16 @@ class PenggunaController extends Controller
         $validated = $request->validate([
             'nama'  => 'required|string|max:100',
             'email' => 'required|email|unique:penggunas,email,' . $pengguna->id,
-            'nik'   => 'nullable|string|max:30',
+            'nik'   => 'nullable|digits_between:8,30',
+            'status' => 'nullable|in:aktif,nonaktif',
         ]);
+
+        $validated['status'] = $validated['status'] ?? $pengguna->status ?? 'aktif';
 
         $pengguna->update($validated);
 
         return redirect()
-            ->route('pengguna.index')
+            ->route('master.pengguna')
             ->with('success', 'Data pengguna berhasil diperbarui!');
     }
 
@@ -103,7 +109,7 @@ class PenggunaController extends Controller
         $pengguna->delete();
 
         return redirect()
-            ->route('pengguna.index')
+            ->route('master.pengguna')
             ->with('success', 'Data pengguna berhasil dihapus!');
     }
 
@@ -119,7 +125,7 @@ class PenggunaController extends Controller
         Excel::import(new PenggunaImport, $request->file('file'));
 
         return redirect()
-            ->route('pengguna.index')
+            ->route('master.pengguna')
             ->with('success', 'Data pengguna berhasil diimport!');
     }
 

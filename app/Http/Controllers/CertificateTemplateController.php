@@ -14,7 +14,13 @@ class CertificateTemplateController extends Controller
     public function index()
     {
         $templates = CertificateTemplate::all();
-        return view('master.sertifikat.index', compact('templates'));
+        $printedAll = 0;
+        $printedThisMonth = 0;
+        if (class_exists(\App\Models\CertificateHistory::class)) {
+            $printedAll = (int) \App\Models\CertificateHistory::sum('jumlah_siswa');
+            $printedThisMonth = (int) \App\Models\CertificateHistory::whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->sum('jumlah_siswa');
+        }
+        return view('master.sertifikat.index', compact('templates', 'printedAll', 'printedThisMonth'));
     }
 
     public function create()
@@ -26,13 +32,15 @@ class CertificateTemplateController extends Controller
     {
         $request->validate([
             'nama_template' => 'required|string|max:255',
-            'file_background' => 'required|image|mimes:png,jpg,jpeg|max:5120',
+            'file_background' => 'required|image|mimes:png,jpg,jpeg,webp|max:5120',
         ]);
 
         $file = $request->file('file_background');
 
-        // Buat nama file unik dengan ekstensi .webp
-        $fileName = Str::uuid()->toString() . '.webp';
+        // Tentukan nama file target (default .webp)
+        $ext = strtolower($file->getClientOriginalExtension());
+        $isWebp = $ext === 'webp';
+        $fileName = Str::uuid()->toString() . ($isWebp ? '.webp' : '.webp');
         $savePath = storage_path('app/public/certificate_templates/' . $fileName);
 
         // Pastikan folder ada
@@ -40,12 +48,15 @@ class CertificateTemplateController extends Controller
             mkdir(storage_path('app/public/certificate_templates'), 0755, true);
         }
 
-        // Buat instance manager (pakai GD driver)
-        $manager = new ImageManager(new Driver());
-
-        // Konversi ke WebP dan simpan
-        $image = $manager->read($file);
-        $image->toWebp(80)->save($savePath);
+        if ($isWebp) {
+            // Jika sudah WebP, simpan langsung tanpa re-encode
+            $file->move(dirname($savePath), basename($savePath));
+        } else {
+            // Konversi ke WebP menggunakan Intervention Image (GD)
+            $manager = new ImageManager(new Driver());
+            $image = $manager->read($file);
+            $image->toWebp(80)->save($savePath);
+        }
 
         // Simpan path ke database
         CertificateTemplate::create([
@@ -68,7 +79,7 @@ class CertificateTemplateController extends Controller
     {
         $request->validate([
             'nama_template' => 'required|string|max:255',
-            'file_background' => 'nullable|image|mimes:png,jpg,jpeg|max:5120',
+            'file_background' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:5120',
         ]);
 
         $template = CertificateTemplate::findOrFail($id);
@@ -85,8 +96,10 @@ class CertificateTemplateController extends Controller
 
             $file = $request->file('file_background');
 
-            // Buat nama file unik dengan ekstensi .webp
-            $fileName = Str::uuid()->toString() . '.webp';
+            // Buat nama file target (default .webp)
+            $ext = strtolower($file->getClientOriginalExtension());
+            $isWebp = $ext === 'webp';
+            $fileName = Str::uuid()->toString() . ($isWebp ? '.webp' : '.webp');
             $savePath = storage_path('app/public/certificate_templates/' . $fileName);
 
             // Pastikan folder ada
@@ -94,12 +107,15 @@ class CertificateTemplateController extends Controller
                 mkdir(storage_path('app/public/certificate_templates'), 0755, true);
             }
 
-            // Buat instance manager (pakai GD driver)
-            $manager = new ImageManager(new Driver());
-
-            // Konversi ke WebP dan simpan
-            $image = $manager->read($file);
-            $image->toWebp(80)->save($savePath);
+            if ($isWebp) {
+                // Jika sudah WebP, simpan langsung tanpa re-encode
+                $file->move(dirname($savePath), basename($savePath));
+            } else {
+                // Konversi ke WebP menggunakan Intervention Image (GD)
+                $manager = new ImageManager(new Driver());
+                $image = $manager->read($file);
+                $image->toWebp(80)->save($savePath);
+            }
 
             // Update path di database
             $template->background_image = 'certificate_templates/' . $fileName;

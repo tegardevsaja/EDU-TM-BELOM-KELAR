@@ -27,8 +27,8 @@
                     @click.stop="selectedElement=index; $refs.canvas.focus()"
                     @dblclick.stop="startInlineEdit(index)"
                     :class="selectedElement===index?'ring-4 ring-blue-500 shadow-xl z-50':'ring-1 ring-transparent hover:ring-blue-300'"
-                    class="absolute cursor-move px-2 py-1 select-none transition-all duration-200"
-                    :style="`left:${element.x}%;top:${element.y}%;transform:translate(-50%,-50%);font-size:${element.fontSize}px;font-family:${element.fontFamily};color:${element.color};font-weight:${element.bold?'bold':'normal'};text-align:${element.align};min-width:100px;`"
+                    class="absolute cursor-move select-none transition-all duration-200"
+                    :style="`left:${element.x}%;top:${element.y}%;transform:translate(${element.align==='left' ? '0' : (element.align==='right' ? '-100%' : '-50%')},-50%);font-size:${element.fontSize}px;font-family:${element.fontFamily};color:${element.color};font-weight:${element.bold?'bold':'normal'};text-align:${element.align};min-width:0;`"
                 >
                     {{-- Text Elements --}}
                     <template x-if="element.type==='text'">
@@ -50,7 +50,7 @@
                     
                     {{-- Image Elements --}}
                     <template x-if="element.type==='image'">
-                        <div class="bg-gray-200 dark:bg-gray-700 rounded border-2 border-dashed border-gray-400 relative overflow-hidden"
+                        <div class="rounded border-2 border-dashed border-gray-400 dark:border-gray-500 relative overflow-hidden bg-transparent"
                              :style="`width: ${element.width || 100}px; height: ${element.height || 100}px;`">
                             <img :src="element.src" class="w-full h-full object-contain" x-show="element.src">
                             <div x-show="!element.src" class="absolute inset-0 flex items-center justify-center text-xs text-gray-500">
@@ -77,8 +77,12 @@
         </div>
     </div>
 
-    {{-- Input Nilai (tampil jika template nilai dipilih) --}}
+    {{-- Input Nilai (tampil jika template nilai dipilih dan bukan template auto import) --}}
     @if(!empty($gradeTemplateId) && $gradeTemplate)
+    @php
+        $isAutoGradeTemplate = \Illuminate\Support\Str::contains($gradeTemplate->nama_template ?? '', '(Auto)');
+    @endphp
+    @unless($isAutoGradeTemplate)
     <div class="mt-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-5">
         <div class="flex items-center mb-4">
             <svg class="w-5 h-5 mr-2 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -232,58 +236,10 @@
             </div>
         </form>
     </div>
+    @endunless
     @endif
 
-    {{-- Debug Panel --}}
-    <div class="mt-4 bg-yellow-50 dark:bg-yellow-900 dark:bg-opacity-20 border-2 border-yellow-300 dark:border-yellow-700 rounded-lg p-4">
-        <div class="flex items-center mb-2">
-            <svg class="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-            </svg>
-            <h4 class="font-bold text-yellow-800 dark:text-yellow-300">Debug Info</h4>
-        </div>
-        <div class="grid grid-cols-2 gap-4 text-xs bg-white dark:bg-gray-800 p-3 rounded border dark:border-gray-700">
-            <div>
-                <span class="text-gray-600 dark:text-gray-400">Total Elemen:</span>
-                <span class="font-bold text-blue-600 dark:text-blue-400 ml-2" x-text="elements.length"></span>
-            </div>
-            <div>
-                <span class="text-gray-600 dark:text-gray-400">Template ID:</span>
-                <span class="font-bold ml-2" x-text="templateId"></span>
-            </div>
-            <div>
-                <span class="text-gray-600 dark:text-gray-400">Element Terpilih:</span>
-                <span class="font-bold ml-2" x-text="selectedElement !== null ? '#' + selectedElement : 'Tidak ada'"></span>
-            </div>
-            <div>
-                <span class="text-gray-600 dark:text-gray-400">Tipe Element:</span>
-                <span class="font-bold ml-2" x-text="selectedElement !== null ? elements[selectedElement]?.type : '-'"></span>
-            </div>
-        </div>
-        <template x-if="selectedElement !== null && elements[selectedElement]">
-            <div class="mt-2 text-xs bg-blue-50 dark:bg-blue-900 dark:bg-opacity-30 p-3 rounded border border-blue-300 dark:border-blue-700">
-                <div class="font-semibold text-blue-800 dark:text-blue-300 mb-1">Posisi Element Saat Ini:</div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <span class="text-gray-700 dark:text-gray-300">X:</span>
-                        <span class="font-mono font-bold ml-1" x-text="Math.round(elements[selectedElement].x * 100) / 100 + '%'"></span>
-                    </div>
-                    <div>
-                        <span class="text-gray-700 dark:text-gray-300">Y:</span>
-                        <span class="font-mono font-bold ml-1" x-text="Math.round(elements[selectedElement].y * 100) / 100 + '%'"></span>
-                    </div>
-                    <div>
-                        <span class="text-gray-700 dark:text-gray-300">Font Size:</span>
-                        <span class="font-mono font-bold ml-1" x-text="elements[selectedElement].fontSize + 'px'"></span>
-                    </div>
-                    <div>
-                        <span class="text-gray-700 dark:text-gray-300">Align:</span>
-                        <span class="font-mono font-bold ml-1" x-text="elements[selectedElement].align"></span>
-                    </div>
-                </div>
-            </div>
-        </template>
-    </div>
+    
 
     {{-- Tools Customization --}}
     <div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -554,38 +510,7 @@
 
     </div>
 
-    {{-- Daftar Siswa / Custom Penerima --}}
-    <div class="mt-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-5">
-        <div class="flex items-center mb-4">
-            <svg class="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-            </svg>
-            <h3 class="font-bold text-lg dark:text-white">
-                Daftar Siswa <span class="text-blue-500" x-text="'(' + siswaList.length + ')' "></span>
-            </h3>
-        </div>
-        <template x-if="siswaList.length > 0">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 max-h-[300px] overflow-y-auto">
-                <template x-for="s in siswaList" :key="s.id">
-                    <div class="p-3 border-2 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 rounded-lg text-sm dark:text-white transition-colors duration-200 bg-gray-50 dark:bg-gray-900">
-                        <div class="font-semibold text-gray-900 dark:text-white" x-text="s.nama"></div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1" x-text="'Kelas: ' + (s.kelas ? s.kelas.nama_kelas : '-')"></div>
-                    </div>
-                </template>
-            </div>
-        </template>
-
-        {{-- Custom recipients when no siswa selected --}}
-        @if($siswaList->isEmpty())
-        <div id="custom-recipients" class="mt-4">
-            <div class="flex items-center justify-between mb-2">
-                <div class="text-sm text-zinc-600 dark:text-zinc-300">Anda tidak memilih data siswa. Tambahkan penerima sertifikat manual di bawah ini.</div>
-                <button type="button" class="px-3 py-1.5 rounded bg-blue-600 text-white text-sm" onclick="addRecipientRow()">+ Sertifikat Baru</button>
-            </div>
-            <div class="space-y-3" id="recipients-list"></div>
-        </div>
-        @endif
-    </div>
+   
 
 </div>
 <script>
@@ -596,7 +521,7 @@ function certificateCustomizer() {
         elements: [], // Will be initialized in init()
         selectedElement: null,
         selectedVariable: '',
-        backgroundImage: '{{ asset("storage/".$template->background_image) }}',
+        backgroundImage: '{{ url("storage/".$template->background_image) }}',
         elementIdCounter: 1000,
         isEditingText: false,
         history: [],
@@ -605,45 +530,24 @@ function certificateCustomizer() {
         variables: [
             {name:'$nama_siswa', label:'$Nama', sample:'Tegar Kurniawan'},
             {name:'$kelas', label:'$Kelas', sample:'XII RPL'},
-            {name:'$nis', label:'$NIS', sample:'12345678'},
-            {name:'$tanggal', label:'$Tanggal', sample:'23 Oktober 2025'},
-            {name:'$nilai', label:'$Nilai', sample:'95'},
-            {name:'$peringkat', label:'$Peringkat', sample:'1'},
+            {name:'$nis', label:'$NIS', sample:'22100001'},
+            {name:'$tanggal', label:'$Tanggal Cetak', sample:'17 November 2025'},
             {name:'$jurusan', label:'$Jurusan', sample:'Rekayasa Perangkat Lunak'},
-            {name:'$ttd', label:'$TTD', sample:'(Signature)'},
+            {name:'$nomor_sertifikat', label:'$No Sertifikat', sample:'001/SMK-TM/11/17/2025'},
         ],
 
-        // 🔥 FIX: Initialize elements from PHP
+        // Initialize elements from PHP
         init() {
             const elementsFromPhp = @json($elements);
-            console.log('='.repeat(60));
-            console.log('🚀 CERTIFICATE CUSTOMIZER INITIALIZED');
-            console.log('='.repeat(60));
-            console.log('📋 Template ID:', this.templateId);
-            console.log('👥 Students Count:', this.siswaList.length);
-            console.log('📦 Elements from PHP:', elementsFromPhp);
-            console.log('🔢 Elements Count:', elementsFromPhp ? elementsFromPhp.length : 0);
-            
             if (Array.isArray(elementsFromPhp) && elementsFromPhp.length > 0) {
                 this.elements = elementsFromPhp;
                 // Set counter to max ID + 1
                 const maxId = Math.max(...this.elements.map(el => el.id || 0));
                 this.elementIdCounter = maxId + 1;
-                console.log('✅ Elements loaded successfully');
-                console.log('📊 Elements details:', this.elements.map(el => ({
-                    id: el.id,
-                    type: el.type,
-                    x: el.x,
-                    y: el.y,
-                    fontSize: el.fontSize
-                })));
-                console.log('🔄 Next Element ID:', this.elementIdCounter);
             } else {
-                console.warn('⚠️ No elements from PHP, starting with empty canvas');
                 this.elements = [];
                 this.elementIdCounter = 1;
             }
-            console.log('='.repeat(60));
 
             // Global keydown fallback if canvas had recent interaction
             const keyHandler = (e) => this.handleKeydown(e);
@@ -666,8 +570,6 @@ function certificateCustomizer() {
             };
             this.elements.push(newElement);
             this.selectedElement = this.elements.length - 1;
-            console.log('✅ Text element added:', newElement);
-            console.log('📊 Total elements:', this.elements.length);
         },
 
         addVariableElement() {
@@ -700,14 +602,10 @@ function certificateCustomizer() {
             this.elements.push(newElement);
             this.selectedElement = this.elements.length - 1;
             this.selectedVariable = '';
-            
-            console.log('✅ Variable element added:', newElement);
-            console.log('📊 Total elements:', this.elements.length);
         },
 
         deleteElement() {
             if (this.selectedElement === null) return;
-            console.log('🗑️ Deleting element:', this.elements[this.selectedElement]);
             this.elements.splice(this.selectedElement, 1);
             this.selectedElement = null;
         },
@@ -1049,6 +947,7 @@ function certificateCustomizer() {
         previewCertificate() {
             const urlParams = new URLSearchParams(window.location.search);
             const kelasId = urlParams.get('kelas_id') || '';
+            const gradeTplId = urlParams.get('grade_template_id') || '';
             // If custom recipients exist, submit a GET form with arrays
             const list = document.getElementById('recipients-list');
             const hasCustom = list && list.children.length > 0;
@@ -1060,6 +959,10 @@ function certificateCustomizer() {
                 if (kelasId) {
                     const hid = document.createElement('input');
                     hid.type = 'hidden'; hid.name = 'kelas_id'; hid.value = kelasId; form.appendChild(hid);
+                }
+                if (gradeTplId) {
+                    const h2 = document.createElement('input');
+                    h2.type = 'hidden'; h2.name = 'grade_template_id'; h2.value = gradeTplId; form.appendChild(h2);
                 }
                 // collect recipients
                 list.querySelectorAll('.recipient-row').forEach(row => {
@@ -1101,7 +1004,11 @@ function certificateCustomizer() {
             }
             // fallback to class/siswa-based preview
             let url = `/master/sertifikat/generate/preview/${this.templateId}`;
-            if (kelasId) url += `?kelas_id=${kelasId}`;
+            const qp = new URLSearchParams();
+            if (kelasId) qp.set('kelas_id', kelasId);
+            if (gradeTplId) qp.set('grade_template_id', gradeTplId);
+            const qs = qp.toString();
+            if (qs) url += `?${qs}`;
             window.open(url, '_blank');
         }
     }
@@ -1224,42 +1131,52 @@ function certificateCustomizer() {
                     <div class="p-3 rounded border bg-zinc-50 dark:bg-zinc-900">
                         <div class="font-semibold text-sm mb-1">{{ $s->nama }}</div>
                         @if($d)
-                        @php $nilai = is_array($d) ? ($d['nilai'] ?? []) : (json_decode($d, true)['nilai'] ?? []);
-                             $cmp = is_array($d) ? ($d['computed'] ?? []) : (json_decode($d, true)['computed'] ?? []);
+                        @php 
+                            // Normalisasi struktur nilai_detail: bisa berupa
+                            // 1) ['nilai' => [...], 'computed' => [...]] (input manual)
+                            // 2) ['row' => [...]] (TA/UKK)
+                            // 3) Struktur grup (PRAKERIN) tanpa 'nilai'/'row', nilai ada di bawah key-key kategori
+                            $raw = is_array($d) ? $d : (json_decode($d, true) ?: []);
+                            if (array_key_exists('nilai', $raw)) {
+                                $nilai = $raw['nilai'];
+                            } elseif (array_key_exists('row', $raw)) {
+                                $nilai = $raw['row'];
+                            } else {
+                                // buang meta yang bukan nilai
+                                $nilai = $raw;
+                                unset($nilai['format'], $nilai['judul_laporan']);
+                            }
+                            $cmp   = $raw['computed'] ?? [];
+
+                            // Fallback: jika total/avg belum ada di computed, hitung dari semua nilai numerik
+                            $fallbackTotal = null;
+                            $fallbackAvg   = null;
+                            if (empty($cmp['total']) || empty($cmp['avg'])) {
+                                $nums = [];
+                                $stack = [$nilai];
+                                while ($stack) {
+                                    $item = array_pop($stack);
+                                    if (is_array($item)) {
+                                        foreach ($item as $v) {
+                                            if (is_array($v)) {
+                                                $stack[] = $v;
+                                            } elseif (is_numeric($v)) {
+                                                $nums[] = (float)$v;
+                                            }
+                                        }
+                                    } elseif (is_numeric($item)) {
+                                        $nums[] = (float)$item;
+                                    }
+                                }
+                                if (count($nums) > 0) {
+                                    $fallbackTotal = array_sum($nums);
+                                    $fallbackAvg   = round($fallbackTotal / count($nums), 2);
+                                }
+                            }
                         @endphp
-                        <table class="w-full text-xs">
-                            <thead>
-                                <tr class="text-zinc-500">
-                                    <th class="text-left py-1 pr-2">Komponen</th>
-                                    <th class="text-right py-1">Nilai</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach(($nilai ?? []) as $k=>$v)
-                                    @if(is_array($v))
-                                        <tr>
-                                            <td class="py-0.5 pr-2 font-semibold" colspan="2">{{ $k }}</td>
-                                        </tr>
-                                        @foreach($v as $subKey=>$subVal)
-                                            <tr>
-                                                <td class="py-0.5 pr-2 pl-3">{{ is_string($subKey) ? $subKey : $subVal }}</td>
-                                                <td class="text-right py-0.5">{{ is_numeric($subVal)?number_format($subVal,2):$subVal }}</td>
-                                            </tr>
-                                        @endforeach
-                                    @else
-                                        <tr>
-                                            <td class="py-0.5 pr-2">{{ $k }}</td>
-                                            <td class="text-right py-0.5">{{ is_numeric($v)?number_format($v,2):$v }}</td>
-                                        </tr>
-                                    @endif
-                                @endforeach
-                            </tbody>
-                        </table>
-                        <div class="mt-2 text-[11px] text-zinc-600">
-                            <div>Total: <span class="font-semibold">{{ $cmp['total'] ?? '-' }}</span></div>
-                            <div>Rata-rata: <span class="font-semibold">{{ $cmp['avg'] ?? '-' }}</span></div>
-                            <div>Rata-rata berbobot: <span class="font-semibold">{{ $cmp['weighted_avg'] ?? '-' }}</span></div>
-                            <div>Predikat: <span class="font-semibold">{{ $cmp['grade'] ?? '-' }}</span></div>
+                        <div class="mt-1 text-[11px] text-zinc-600">
+                            <div>Total: <span class="font-semibold">{{ $cmp['total'] ?? $fallbackTotal ?? '-' }}</span></div>
+                            <div>Rata-rata: <span class="font-semibold">{{ $cmp['avg'] ?? $fallbackAvg ?? '-' }}</span></div>
                         </div>
                         @else
                             <div class="text-xs text-zinc-500">Belum ada nilai.</div>

@@ -40,9 +40,25 @@ class TemplatePenilaian extends Model
 
     public function scopeVisibleFor($query, $user)
     {
-        if (method_exists($user, 'hasRole') && ($user->hasRole('master_admin') || $user->hasRole('admin'))) {
-            return $query;
+        if (method_exists($user, 'hasRole')) {
+            // Master admin & admin bisa melihat semua template
+            if ($user->hasRole('master_admin') || $user->hasRole('admin')) {
+                return $query;
+            }
+
+            // Guru bisa melihat template umum + khusus guru
+            if ($user->hasRole('guru')) {
+                return $query->where(function ($q) {
+                    $q->whereNull('visibility')
+                      ->orWhereIn('visibility', ['all', 'guru']);
+                });
+            }
         }
-        return $query->where('visibility', 'all');
+
+        // Role lain hanya melihat template umum (atau visibility kosong)
+        return $query->where(function ($q) {
+            $q->whereNull('visibility')
+              ->orWhere('visibility', 'all');
+        });
     }
 }

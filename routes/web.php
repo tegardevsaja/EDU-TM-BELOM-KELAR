@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Fortify\Features;
 use App\Enums\UserRole;
 
@@ -19,6 +20,8 @@ use App\Http\Controllers\CertificateTemplateController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\OtpController;
 use App\Http\Controllers\CertificateGenerationController;
+use App\Http\Controllers\NilaiImportController;
+use App\Http\Controllers\AbsensiController;
 
 // Livewire auth components
 use App\Livewire\Auth\VerifyOtp;
@@ -34,6 +37,8 @@ use App\Livewire\Settings\{Appearance, Password, Profile, TwoFactor};
 Route::get('/', fn() => view('welcome'))->name('home');
 
 Route::get('/login', fn() => view('auth.login'))->name('login');
+// Explicitly block any registration attempt
+Route::match(['get','post'], '/register', function() { abort(404); })->name('register');
 
 Route::middleware('guest')->group(function () {
     Route::get('/request-otp', [OtpRequestController::class, 'showForm'])->name('request.otp');
@@ -78,7 +83,7 @@ Route::middleware(['auth', 'verified'])
     Route::post('/users', [UserController::class, 'store'])->middleware('permission:users.create')->name('users.store');
     Route::get('/users/{id}/edit', [UserController::class, 'edit'])->middleware('permission:users.update')->name('users.edit');
     Route::put('/users/{id}', [UserController::class, 'update'])->middleware('permission:users.update')->name('users.update');
-    Route::delete('/users', [UserController::class, 'destroy'])->middleware('permission:users.delete')->name('users.destroy');
+    Route::delete('/users/{id}', [UserController::class, 'destroy'])->middleware('permission:users.delete')->name('users.destroy');
 
     // route jurusan 
     Route::get('/jurusan', [JurusanController::class, 'index'])->middleware('permission:jurusan.view')->name('jurusan');
@@ -104,10 +109,13 @@ Route::middleware(['auth', 'verified'])
     Route::put('/siswa/{id}', [SiswaController::class, 'update'])->middleware('permission:siswa.update')->name('siswa.update'); 
     Route::delete('/siswa/{id}', [SiswaController::class, 'destroy'])->middleware('permission:siswa.delete')->name('siswa.destroy');
 
-    Route::get('/siswa/template-download', [SiswaController::class, 'downloadTemplate'])->middleware('permission:siswa.template')->name('siswa.template');
-    Route::get('siswa/import', [SiswaImportController::class, 'showImportForm'])->middleware('permission:siswa.import')->name('master.siswa.import');
+    Route::get('/siswa/template-download', [SiswaController::class, 'downloadTemplate'])->middleware('permission:siswa.template')->name('siswa.template-download');
+    Route::get('siswa/import', [SiswaImportController::class, 'showImportForm'])->middleware('permission:siswa.import')->name('siswa.import');
     Route::post('/siswa/import/preview', [SiswaImportController::class, 'previewImport'])->middleware('permission:siswa.import')->name('siswa.import.preview');
     Route::post('/siswa/import/store', [SiswaImportController::class, 'storeImport'])->middleware('permission:siswa.import')->name('siswa.import.store');
+    // Export siswa
+    Route::get('/siswa/export/csv', [SiswaController::class, 'exportCsv'])->middleware('permission:siswa.export')->name('siswa.export.csv');
+    Route::get('/siswa/export/excel', [SiswaController::class, 'exportExcel'])->middleware('permission:siswa.export')->name('siswa.export.excel');
     
     // route tahun ajaran 
     Route::get('/tahunajaran', [TahunAjaranController::class, 'index'])->middleware('permission:tahunAjaran.view')->name('tahunAjaran');
@@ -126,17 +134,33 @@ Route::middleware(['auth', 'verified'])
     Route::delete('/penilaian/{id}', [TemplatePenilaianController::class, 'destroy'])->middleware('permission:penilaian.delete')->name('penilaian.destroy');
 
     Route::get('/nilai', [PenilaianController::class, 'index'])->middleware('permission:nilai.view')->name('nilai.index');
+    
+    // nilai import routes are defined per role group (/admin and /guru)
+    
+    Route::get('/nilai/create', [PenilaianController::class, 'chooseTemplate'])->middleware('permission:nilai.create')->name('nilai.choose-template');
     Route::get('/nilai/create/{templateId}', [PenilaianController::class, 'create'])->middleware('permission:nilai.create')->name('nilai.create');
-    Route::post('/nilai/{templateId}', [PenilaianController::class, 'store'])->middleware('permission:nilai.create')->name('penilaian.store');
+    Route::post('/nilai/{templateId}', [PenilaianController::class, 'store'])->middleware('permission:nilai.create')->name('nilai.store');
+    Route::get('/nilai/create/{templateId}/bulk', [PenilaianController::class, 'bulkCreate'])->middleware('permission:nilai.create')->name('nilai.create-bulk');
+    Route::post('/nilai/{templateId}/bulk', [PenilaianController::class, 'bulkStore'])->middleware('permission:nilai.create')->name('nilai.store-bulk');
+    Route::get('/nilai/{id}', [PenilaianController::class, 'show'])->middleware('permission:nilai.view')->name('nilai.show');
+    Route::get('/nilai/{id}/edit', [PenilaianController::class, 'edit'])->middleware('permission:nilai.update')->name('nilai.edit');
+    Route::put('/nilai/{id}', [PenilaianController::class, 'update'])->middleware('permission:nilai.update')->name('nilai.update');
+    Route::delete('/nilai/{id}', [PenilaianController::class, 'destroy'])->middleware('permission:nilai.delete')->name('nilai.destroy');
 
-    // route absensi
-    Route::get('/absensi', [AttendanceController::class, 'index'])->middleware('permission:absensi.view')->name('absensi');
-    Route::get('/absensi/create', [AttendanceController::class, 'create'])->middleware('permission:absensi.create')->name('absensi.create');
-    Route::post('/absensi', [AttendanceController::class, 'store'])->middleware('permission:absensi.create')->name('absensi.store');
-    Route::get('/absensi/{id}/edit', [AttendanceController::class, 'edit'])->middleware('permission:absensi.update')->name('absensi.edit');
-    Route::put('/absensi/{id}', [AttendanceController::class, 'update'])->middleware('permission:absensi.update')->name('absensi.update');
-    Route::post('/absensi/{id}/lock', [AttendanceController::class, 'lock'])->middleware('permission:absensi.lock')->name('absensi.lock');
-    Route::delete('/absensi/{id}', [AttendanceController::class, 'destroy'])->middleware('permission:absensi.delete')->name('absensi.destroy');
+    // route absensi (accessible to all authenticated roles)
+    Route::get('/absensi', [AttendanceController::class, 'index'])->name('absensi');
+    Route::get('/absensi/create', [AttendanceController::class, 'create'])->name('absensi.create');
+    Route::post('/absensi', [AttendanceController::class, 'store'])->name('absensi.store');
+    Route::get('/absensi/{id}/edit', [AttendanceController::class, 'edit'])->name('absensi.edit');
+    Route::put('/absensi/{id}', [AttendanceController::class, 'update'])->name('absensi.update');
+    Route::post('/absensi/{id}/lock', [AttendanceController::class, 'lock'])->name('absensi.lock');
+    Route::delete('/absensi/{id}', [AttendanceController::class, 'destroy'])->name('absensi.destroy');
+    Route::get('/absensi/export/monthly', [AttendanceController::class, 'exportMonthly'])->name('absensi.export-monthly');
+
+    // tambahan export
+    Route::get('/absensi/export/weekly', [AttendanceController::class, 'exportWeekly'])->name('absensi.export-weekly');
+    Route::get('/absensi/export/yearly', [AttendanceController::class, 'exportYearly'])->name('absensi.export-yearly');
+    Route::get('/absensi/export/school', [AttendanceController::class, 'exportSchool'])->name('absensi.export-school');
 
     Route::get('/sertifikat/template', [CertificateTemplateController::class, 'index'])->middleware('permission:sertifikat_template.view')->name('sertifikat.index');
     Route::post('/sertifikat/template/store', [CertificateTemplateController::class, 'store'])->middleware('permission:sertifikat_template.create')->name('sertifikat.store');
@@ -144,6 +168,8 @@ Route::middleware(['auth', 'verified'])
     Route::put('/sertifikat/template/{id}', [CertificateTemplateController::class, 'update'])->middleware('permission:sertifikat_template.update')->name('sertifikat.update');
     Route::delete('/sertifikat/template/{id}', [CertificateTemplateController::class, 'destroy'])->middleware('permission:sertifikat_template.delete')->name('sertifikat.destroy');
     Route::get('/sertifikat/template/create', [CertificateTemplateController::class, 'create'])->middleware('permission:sertifikat_template.create')->name('sertifikat.create');
+    Route::get('/sertifikat/select-template', [\App\Http\Controllers\CertificateGenerationController::class, 'stepSelectTemplate'])->middleware('permission:menu.sertifikat')->name('sertifikat.select_template');
+    Route::get('/sertifikat/generate/history', [\App\Http\Controllers\CertificateGenerationController::class, 'history'])->middleware('permission:menu.sertifikat')->name('sertifikat.generate.history');
 
 // Certificate Generation Flow
 Route::prefix('sertifikat')->name('sertifikat.')->middleware('permission:menu.sertifikat')->group(function () {
@@ -154,6 +180,16 @@ Route::prefix('sertifikat')->name('sertifikat.')->middleware('permission:menu.se
     // STEP 2 – Pilih Template Nilai (opsional)
     Route::get('/select-grade/{template_id}', [CertificateGenerationController::class, 'stepSelectGrade'])
         ->name('select_grade');
+    // Excel template + import nilai
+    Route::get('/grade/template-excel', [CertificateGenerationController::class, 'downloadGradeExcelTemplate'])
+        ->name('grade.template-excel');
+    Route::post('/grade/import/{template_id}', [CertificateGenerationController::class, 'importGradesExcel'])
+        ->name('grade.import');
+    // Guard: if user hits the POST import URL via GET, redirect back to select grade
+    Route::get('/grade/import/{template_id}', function($template_id) {
+        return redirect()->route('master.sertifikat.select_grade', ['template_id' => $template_id])
+            ->with('error', 'Akses tidak valid untuk import. Silakan unggah file melalui tombol Import.');
+    });
 
     // STEP 2.5 – Pilih Siswa (opsional)
     Route::get('/select-students/{template_id}', [CertificateGenerationController::class, 'stepSelectStudents'])
@@ -186,6 +222,16 @@ Route::prefix('sertifikat')->name('sertifikat.')->middleware('permission:menu.se
     Route::post('/generate/process', [CertificateGenerationController::class, 'generate'])
         ->name('generate.process');
 
+    // Download View (browser-friendly layout mirroring PDF)
+    Route::get('/generate/download-view/{template_id}', [CertificateGenerationController::class, 'downloadView'])
+        ->name('generate.download-view');
+
+    // Pengaturan global Penguji & Tanda Tangan untuk lampiran nilai
+    Route::get('/signatures', [CertificateGenerationController::class, 'editSignatures'])
+        ->name('signatures.edit');
+    Route::post('/signatures', [CertificateGenerationController::class, 'updateSignatures'])
+        ->name('signatures.update');
+
     // Eligibility override
     Route::post('/eligibility/override', [CertificateGenerationController::class, 'override'])
         ->name('eligibility.override');
@@ -214,6 +260,18 @@ Route::middleware(['auth', 'verified'])
     ->name('admin.')
     ->group(function () {
         Route::view('/dashboard', 'admin.dashboard')->name('dashboard');
+        // Absensi (admin) – now protected by permissions
+        Route::get('/absensi', [AttendanceController::class, 'index'])->middleware('permission:absensi.view')->name('absensi');
+        Route::get('/absensi/create', [AttendanceController::class, 'create'])->middleware('permission:absensi.create')->name('absensi.create');
+        Route::post('/absensi', [AttendanceController::class, 'store'])->middleware('permission:absensi.create')->name('absensi.store');
+        Route::get('/absensi/{id}/edit', [AttendanceController::class, 'edit'])->middleware('permission:absensi.update')->name('absensi.edit');
+        Route::put('/absensi/{id}', [AttendanceController::class, 'update'])->middleware('permission:absensi.update')->name('absensi.update');
+        Route::post('/absensi/{id}/lock', [AttendanceController::class, 'lock'])->middleware('permission:absensi.update')->name('absensi.lock');
+        Route::delete('/absensi/{id}', [AttendanceController::class, 'destroy'])->middleware('permission:absensi.delete')->name('absensi.destroy');
+        Route::get('/absensi/export/monthly', [AttendanceController::class, 'exportMonthly'])->middleware('permission:absensi.export')->name('absensi.export-monthly');
+        Route::get('/absensi/export/weekly', [AttendanceController::class, 'exportWeekly'])->middleware('permission:absensi.export')->name('absensi.export-weekly');
+        Route::get('/absensi/export/yearly', [AttendanceController::class, 'exportYearly'])->middleware('permission:absensi.export')->name('absensi.export-yearly');
+        Route::get('/absensi/export/school', [AttendanceController::class, 'exportSchool'])->middleware('permission:absensi.export')->name('absensi.export-school');
         
         // Reuse same controllers as master, but with admin prefix
         Route::get('/pengguna', [PenggunaController::class, 'index'])->middleware('permission:pengguna.view')->name('pengguna');
@@ -230,8 +288,8 @@ Route::middleware(['auth', 'verified'])
         Route::get('/users/create', [UserController::class, 'create'])->middleware('permission:users.create')->name('users.create');
         Route::post('/users', [UserController::class, 'store'])->middleware('permission:users.create')->name('users.store');
         Route::get('/users/{id}/edit', [UserController::class, 'edit'])->middleware('permission:users.update')->name('users.edit');
-        Route::put('/users', [UserController::class, 'update'])->middleware('permission:users.update')->name('users.update');
-        Route::delete('/users', [UserController::class, 'destroy'])->middleware('permission:users.delete')->name('users.destroy');
+        Route::put('/users/{id}', [UserController::class, 'update'])->middleware('permission:users.update')->name('users.update');
+        Route::delete('/users/{id}', [UserController::class, 'destroy'])->middleware('permission:users.delete')->name('users.destroy');
         
         Route::get('/jurusan', [JurusanController::class, 'index'])->middleware('permission:jurusan.view')->name('jurusan');
         Route::get('/jurusan/create', [JurusanController::class, 'create'])->middleware('permission:jurusan.create')->name('jurusan.create');
@@ -254,6 +312,14 @@ Route::middleware(['auth', 'verified'])
         Route::put('/siswa/{id}', [SiswaController::class, 'update'])->middleware('permission:siswa.update')->name('siswa.update');
         Route::delete('/siswa/{id}', [SiswaController::class, 'destroy'])->middleware('permission:siswa.delete')->name('siswa.destroy');
         
+        // Siswa template and import/export routes
+        Route::get('/siswa/template-download', [SiswaController::class, 'downloadTemplate'])->middleware('permission:siswa.template')->name('siswa.template-download');
+        Route::get('/siswa/import', [SiswaImportController::class, 'showImportForm'])->middleware('permission:siswa.import')->name('siswa.import');
+        Route::post('/siswa/import/preview', [SiswaImportController::class, 'previewImport'])->middleware('permission:siswa.import')->name('siswa.import.preview');
+        Route::post('/siswa/import/store', [SiswaImportController::class, 'storeImport'])->middleware('permission:siswa.import')->name('siswa.import.store');
+        Route::get('/siswa/export/csv', [SiswaController::class, 'exportCsv'])->middleware('permission:siswa.export')->name('siswa.export.csv');
+        Route::get('/siswa/export/excel', [SiswaController::class, 'exportExcel'])->middleware('permission:siswa.export')->name('siswa.export.excel');
+        
         Route::get('/tahunajaran', [TahunAjaranController::class, 'index'])->middleware('permission:tahunAjaran.view')->name('tahunAjaran');
         Route::get('/tahun-ajaran/create', [TahunAjaranController::class, 'create'])->middleware('permission:tahunAjaran.create')->name('tahun-ajaran.create');
         Route::post('/tahun-ajaran', [TahunAjaranController::class, 'store'])->middleware('permission:tahunAjaran.create')->name('tahun-ajaran.store');
@@ -263,8 +329,21 @@ Route::middleware(['auth', 'verified'])
         
         Route::get('/penilaian', [TemplatePenilaianController::class, 'index'])->middleware('permission:penilaian.view')->name('penilaian');
         Route::get('/nilai', [PenilaianController::class, 'index'])->middleware('permission:nilai.view')->name('nilai.index');
-        
+
+        // Nilai import (TA, UKK, Prakerin) for ADMIN
+        Route::get('/nilai/import', [NilaiImportController::class, 'index'])->middleware('permission:nilai.import')->name('nilai.import.index');
+        Route::post('/nilai/import/ta', [NilaiImportController::class, 'importTA'])->middleware('permission:nilai.import')->name('nilai.import.ta');
+        Route::post('/nilai/import/ukk', [NilaiImportController::class, 'importUKK'])->middleware('permission:nilai.import')->name('nilai.import.ukk');
+        Route::post('/nilai/import/prakerin', [NilaiImportController::class, 'importPrakerin'])->middleware('permission:nilai.import')->name('nilai.import.prakerin');
+
         Route::get('/sertifikat', [CertificateTemplateController::class, 'index'])->middleware('permission:sertifikat.view')->name('sertifikat.index');
+        Route::post('/sertifikat/store', [CertificateTemplateController::class, 'store'])->middleware('permission:sertifikat.create')->name('sertifikat.store');
+        Route::get('/sertifikat/create', [CertificateTemplateController::class, 'create'])->middleware('permission:sertifikat.create')->name('sertifikat.create');
+        Route::get('/sertifikat/{id}/edit', [CertificateTemplateController::class, 'edit'])->middleware('permission:sertifikat.update')->name('sertifikat.edit');
+        Route::put('/sertifikat/{id}', [CertificateTemplateController::class, 'update'])->middleware('permission:sertifikat.update')->name('sertifikat.update');
+        Route::delete('/sertifikat/{id}', [CertificateTemplateController::class, 'destroy'])->middleware('permission:sertifikat.delete')->name('sertifikat.destroy');
+        Route::get('/sertifikat/select-template', [\App\Http\Controllers\CertificateGenerationController::class, 'stepSelectTemplate'])->middleware('permission:menu.sertifikat')->name('sertifikat.select_template');
+        Route::get('/sertifikat/generate/history', [\App\Http\Controllers\CertificateGenerationController::class, 'history'])->middleware('permission:menu.sertifikat')->name('sertifikat.generate.history');
     });
 
 // Guru Routes
@@ -273,6 +352,18 @@ Route::middleware(['auth', 'verified'])
     ->name('guru.')
     ->group(function () {
         Route::view('/dashboard', 'guru.dashboard')->name('dashboard');
+        // Absensi (guru) – now protected by permissions
+        Route::get('/absensi', [AttendanceController::class, 'index'])->middleware('permission:absensi.view')->name('absensi');
+        Route::get('/absensi/create', [AttendanceController::class, 'create'])->middleware('permission:absensi.create')->name('absensi.create');
+        Route::post('/absensi', [AttendanceController::class, 'store'])->middleware('permission:absensi.create')->name('absensi.store');
+        Route::get('/absensi/{id}/edit', [AttendanceController::class, 'edit'])->middleware('permission:absensi.update')->name('absensi.edit');
+        Route::put('/absensi/{id}', [AttendanceController::class, 'update'])->middleware('permission:absensi.update')->name('absensi.update');
+        Route::post('/absensi/{id}/lock', [AttendanceController::class, 'lock'])->middleware('permission:absensi.update')->name('absensi.lock');
+        Route::delete('/absensi/{id}', [AttendanceController::class, 'destroy'])->middleware('permission:absensi.delete')->name('absensi.destroy');
+        Route::get('/absensi/export/monthly', [AttendanceController::class, 'exportMonthly'])->middleware('permission:absensi.export')->name('absensi.export-monthly');
+        Route::get('/absensi/export/weekly', [AttendanceController::class, 'exportWeekly'])->middleware('permission:absensi.export')->name('absensi.export-weekly');
+        Route::get('/absensi/export/yearly', [AttendanceController::class, 'exportYearly'])->middleware('permission:absensi.export')->name('absensi.export-yearly');
+        Route::get('/absensi/export/school', [AttendanceController::class, 'exportSchool'])->middleware('permission:absensi.export')->name('absensi.export-school');
         
         // Reuse same controllers as master, but with guru prefix
         Route::get('/pengguna', [PenggunaController::class, 'index'])->middleware('permission:pengguna.view')->name('pengguna');
@@ -286,8 +377,8 @@ Route::middleware(['auth', 'verified'])
         Route::get('/users/create', [UserController::class, 'create'])->middleware('permission:users.create')->name('users.create');
         Route::post('/users', [UserController::class, 'store'])->middleware('permission:users.create')->name('users.store');
         Route::get('/users/{id}/edit', [UserController::class, 'edit'])->middleware('permission:users.update')->name('users.edit');
-        Route::put('/users', [UserController::class, 'update'])->middleware('permission:users.update')->name('users.update');
-        Route::delete('/users', [UserController::class, 'destroy'])->middleware('permission:users.delete')->name('users.destroy');
+        Route::put('/users/{id}', [UserController::class, 'update'])->middleware('permission:users.update')->name('users.update');
+        Route::delete('/users/{id}', [UserController::class, 'destroy'])->middleware('permission:users.delete')->name('users.destroy');
         
         Route::get('/jurusan', [JurusanController::class, 'index'])->middleware('permission:jurusan.view')->name('jurusan');
         Route::get('/jurusan/create', [JurusanController::class, 'create'])->middleware('permission:jurusan.create')->name('jurusan.create');
@@ -310,6 +401,14 @@ Route::middleware(['auth', 'verified'])
         Route::put('/siswa/{id}', [SiswaController::class, 'update'])->middleware('permission:siswa.update')->name('siswa.update');
         Route::delete('/siswa/{id}', [SiswaController::class, 'destroy'])->middleware('permission:siswa.delete')->name('siswa.destroy');
         
+        // Siswa template and import/export routes
+        Route::get('/siswa/template-download', [SiswaController::class, 'downloadTemplate'])->middleware('permission:siswa.template')->name('siswa.template-download');
+        Route::get('/siswa/import', [SiswaImportController::class, 'showImportForm'])->middleware('permission:siswa.import')->name('siswa.import');
+        Route::post('/siswa/import/preview', [SiswaImportController::class, 'previewImport'])->middleware('permission:siswa.import')->name('siswa.import.preview');
+        Route::post('/siswa/import/store', [SiswaImportController::class, 'storeImport'])->middleware('permission:siswa.import')->name('siswa.import.store');
+        Route::get('/siswa/export/csv', [SiswaController::class, 'exportCsv'])->middleware('permission:siswa.export')->name('siswa.export.csv');
+        Route::get('/siswa/export/excel', [SiswaController::class, 'exportExcel'])->middleware('permission:siswa.export')->name('siswa.export.excel');
+        
         Route::get('/tahunajaran', [TahunAjaranController::class, 'index'])->middleware('permission:tahunAjaran.view')->name('tahunAjaran');
         Route::get('/tahun-ajaran/create', [TahunAjaranController::class, 'create'])->middleware('permission:tahunAjaran.create')->name('tahun-ajaran.create');
         Route::post('/tahun-ajaran', [TahunAjaranController::class, 'store'])->middleware('permission:tahunAjaran.create')->name('tahun-ajaran.store');
@@ -320,7 +419,20 @@ Route::middleware(['auth', 'verified'])
         Route::get('/penilaian', [TemplatePenilaianController::class, 'index'])->middleware('permission:penilaian.view')->name('penilaian');
         Route::get('/nilai', [PenilaianController::class, 'index'])->middleware('permission:nilai.view')->name('nilai.index');
         
+        // Nilai import (TA, UKK, Prakerin) for GURU
+        Route::get('/nilai/import', [NilaiImportController::class, 'index'])->middleware('permission:nilai.import')->name('nilai.import.index');
+        Route::post('/nilai/import/ta', [NilaiImportController::class, 'importTA'])->middleware('permission:nilai.import')->name('nilai.import.ta');
+        Route::post('/nilai/import/ukk', [NilaiImportController::class, 'importUKK'])->middleware('permission:nilai.import')->name('nilai.import.ukk');
+        Route::post('/nilai/import/prakerin', [NilaiImportController::class, 'importPrakerin'])->middleware('permission:nilai.import')->name('nilai.import.prakerin');
+        
         Route::get('/sertifikat', [CertificateTemplateController::class, 'index'])->middleware('permission:sertifikat.view')->name('sertifikat.index');
+        Route::post('/sertifikat/store', [CertificateTemplateController::class, 'store'])->middleware('permission:sertifikat.create')->name('sertifikat.store');
+        Route::get('/sertifikat/create', [CertificateTemplateController::class, 'create'])->middleware('permission:sertifikat.create')->name('sertifikat.create');
+        Route::get('/sertifikat/{id}/edit', [CertificateTemplateController::class, 'edit'])->middleware('permission:sertifikat.update')->name('sertifikat.edit');
+        Route::put('/sertifikat/{id}', [CertificateTemplateController::class, 'update'])->middleware('permission:sertifikat.update')->name('sertifikat.update');
+        Route::delete('/sertifikat/{id}', [CertificateTemplateController::class, 'destroy'])->middleware('permission:sertifikat.delete')->name('sertifikat.destroy');
+        Route::get('/sertifikat/select-template', [\App\Http\Controllers\CertificateGenerationController::class, 'stepSelectTemplate'])->middleware('permission:menu.sertifikat')->name('sertifikat.select_template');
+        Route::get('/sertifikat/generate/history', [\App\Http\Controllers\CertificateGenerationController::class, 'history'])->middleware('permission:menu.sertifikat')->name('sertifikat.generate.history');
     });
 
 // Settings (auth)

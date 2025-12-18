@@ -3,7 +3,7 @@
         <!-- Header -->
         <div class="mb-8">
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Tambah Siswa</h2>
-            <p class="text-gray-600 dark:text-gray-400">Import data siswa secara massal menggunakan file Excel atau CSV</p>
+            <p class="text-gray-600 dark:text-gray-400">Import data siswa secara massal menggunakan file Excel (.xlsx, .xls) atau CSV (.csv)</p>
         </div>
 
         <!-- Toggle Input / Import -->
@@ -313,6 +313,10 @@
             return filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
         }
 
+        function updateSubmitState() {
+            submitBtn.disabled = !(fileInput.files && fileInput.files.length > 0);
+        }
+
         function showFile(file) {
             uploadPlaceholder.classList.add('hidden');
             filePreview.classList.remove('hidden');
@@ -331,11 +335,11 @@
                 uploadSuccess.classList.remove('hidden');
             }, 600);
 
-            // Validate file size
             if (file.size > MAX_SIZE) {
                 alert('Ukuran file terlalu besar! Maksimal 100 MB');
                 resetFile();
             }
+            updateSubmitState();
         }
 
         function resetFile() {
@@ -344,6 +348,7 @@
             uploadPlaceholder.classList.remove('hidden');
             fileProgress.style.width = '0%';
             uploadSuccess.classList.add('hidden');
+            updateSubmitState();
         }
 
         // Click area to trigger input
@@ -389,10 +394,7 @@
             resetFile();
         });
 
-        // Disable submit button if no file
-        submitBtn.disabled = true;
-        fileInput.addEventListener('change', () => {
-            submitBtn.disabled = fileInput.files.length === 0;
-        });
+        updateSubmitState();
     </script>
+
 </x-layouts.app>

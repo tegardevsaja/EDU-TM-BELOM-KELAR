@@ -30,7 +30,7 @@ class SiswaImportController extends Controller
 {
     // Validasi file
     $request->validate([
-        'file_excel' => 'required|mimes:xlsx,xls|max:2048',
+        'file_excel' => 'required|mimes:xlsx,xls,csv|max:2048',
         'kelas_id' => 'required|exists:kelas,id',
         'jurusan_id' => 'required|exists:jurusans,id',
         'tahun_ajaran_id' => 'required|exists:tahun_ajarans,id',

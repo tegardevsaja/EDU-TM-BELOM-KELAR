@@ -24,6 +24,7 @@ class AutoGraduateStudents extends Command
      */
     protected $description = 'Automatically graduate students to Alumni status based on academic year end dates';
 
+
     /**
      * Execute the console command.
      */

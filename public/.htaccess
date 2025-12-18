@@ -5,6 +5,9 @@
 
     RewriteEngine On
 
+    # Serve WebP with correct MIME type
+    AddType image/webp .webp
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

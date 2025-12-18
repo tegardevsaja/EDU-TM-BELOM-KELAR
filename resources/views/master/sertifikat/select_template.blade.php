@@ -8,8 +8,13 @@
                     data-id="{{ $template->id }}">
                     <input type="radio" name="template_id" value="{{ $template->id }}" class="hidden template-radio">
 
-                    @if ($template->background_image)
-                        <img src="{{ asset('storage/' . $template->background_image) }}" 
+                    @php
+                        $path = $template->background_image;
+                        $exists = $path && \Illuminate\Support\Facades\Storage::disk('public')->exists($path);
+                        $imgUrl = $exists ? \Illuminate\Support\Facades\Storage::disk('public')->url($path) : null;
+                    @endphp
+                    @if ($imgUrl)
+                        <img src="{{ $imgUrl }}?v={{ time() }}" 
                             alt="{{ $template->nama_template }}" 
                             class="w-full h-40 object-cover rounded mb-3">
                     @else

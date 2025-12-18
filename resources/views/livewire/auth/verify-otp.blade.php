@@ -6,16 +6,10 @@
                 <img src="{{ asset('logo/EDUTMLogo.png') }}" alt="">
             </div>
             <x-auth-header 
-                :title="__('Verifikasi OTP')" 
-                :description="__('Masukkan kode OTP yang dikirim ke email Anda')"
+                :title="__('Verifikasi Kode OTP')" 
+                :description="__('Masukkan kode OTP rahasia yang baru saja kami kirim ke email kamu')"
             />
 
-            @if (session('debug_otp'))
-                <div class="rounded-lg bg-yellow-50 p-4 text-sm border border-yellow-200 mt-4">
-                    <strong class="text-yellow-900">DEBUG:</strong>
-                    <span class="font-mono text-lg text-yellow-900">Kode OTP: {{ session('debug_otp') }}</span>
-                </div>
-            @endif
 
             @if (session('success'))
                 <div class="rounded-lg bg-green-50 p-4 text-sm text-green-800 border border-green-200 mt-4">
@@ -66,9 +60,12 @@
                     }
                 }">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-3 text-center">
-                        {{ __('Kode OTP') }}
+                    <label class="block text-sm font-medium text-gray-800 mb-2 text-center">
+                        {{ __('Masukkan Kode OTP') }}
                     </label>
+                    <p class="text-xs text-gray-500 text-center mb-3">
+                        Cek kotak masuk email kamu. Demi keamanan, jangan bagikan kode ini ke siapa pun, termasuk pihak yang mengaku dari {{ config('app.name') }}.
+                    </p>
                     
                     {{-- OTP Input Component --}}
                     <div
@@ -154,9 +151,9 @@
                 <div class="space-y-3">
                     <button 
                         type="submit"
-                        class="w-full py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                        class="w-full py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition cursor-pointer"
                     >
-                        {{ __('Verifikasi OTP') }}
+                        {{ __('Verifikasi Kode OTP') }}
                     </button>
 
                     <button 
@@ -174,20 +171,22 @@
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
-                            {{ __('Kirim Ulang OTP dalam') }} <span x-text="countdown"></span>{{ __('s') }}
+                            {{ __('Kirim ulang OTP dalam') }} <span x-text="countdown"></span>{{ __(' detik') }}
                         </span>
                         <span x-show="canResend">
-                            {{ __('Kirim Ulang OTP') }}
+                            {{ __('Kirim Ulang Kode OTP') }}
                         </span>
                     </button>
                 </div>
 
                 <div class="text-center space-y-2">
                     <p class="text-sm text-gray-500">
-                        Kode OTP berlaku selama 10 menit
+                        Kode OTP berlaku selama <span class="font-medium">10 menit</span> sejak dikirim.
                     </p>
                     <p class="text-xs text-gray-400">
-                        Tidak menerima kode? Tunggu <span x-show="!canResend" x-text="countdown"></span><span x-show="!canResend">s</span><span x-show="canResend">dan klik tombol kirim ulang</span>
+                        Tidak menerima kode? Cek folder spam/promosi. Jika masih belum ada, tunggu
+                        <span x-show="!canResend" x-text="countdown"></span><span x-show="!canResend"> detik</span>
+                        <span x-show="canResend">dan klik tombol <span class="font-medium">Kirim Ulang Kode OTP</span>.</span>
                     </p>
                 </div>
 

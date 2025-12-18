@@ -19,9 +19,10 @@ class ResetWithOtp extends Component
             'password' => [
                 'required',
                 'string',
-                'min:8',
                 'confirmed',
-                PasswordRule::defaults()
+                PasswordRule::min(8)
+                    ->numbers()
+                    ->symbols(),
             ],
         ];
     }
@@ -30,6 +31,7 @@ class ResetWithOtp extends Component
         'password.required' => 'Password baru harus diisi.',
         'password.min' => 'Password minimal 8 karakter.',
         'password.confirmed' => 'Konfirmasi password tidak cocok.',
+        'password.*' => 'Password harus minimal 8 karakter, mengandung angka dan simbol, dan sama dengan konfirmasi.',
     ];
 
     public function mount($email)

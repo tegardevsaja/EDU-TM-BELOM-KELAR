@@ -28,6 +28,7 @@ class Penilaian extends Model
 
      protected $casts = [
         'nilai_detail' => 'array',
+        'tanggal_input' => 'datetime',
      ];
 
     public function siswa()
@@ -55,6 +56,6 @@ class Penilaian extends Model
         if (method_exists($user, 'hasRole') && $user->hasRole('admin')) {
             return $query;
         }
-        return $query->where('visibility', 'all');
+        return $query->where('penilaian.visibility', 'all');
     }
 }

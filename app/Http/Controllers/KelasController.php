@@ -59,7 +59,9 @@ class KelasController extends Controller
     {
         $jurusans = Jurusan::all();
 
-        $users = User::whereNotIn('id', Kelas::pluck('wali_kelas_id')->filter())->get();
+        $users = User::where('role', 'guru')
+            ->whereNotIn('id', Kelas::pluck('wali_kelas_id')->filter())
+            ->get();
         return view('master.kelas.create', compact('jurusans', 'users'));
     }
 
@@ -68,7 +70,7 @@ class KelasController extends Controller
         $validated = $request->validate([
             'nama_kelas'     => 'required|string|max:50',
             'jurusan_id'     => 'required|exists:jurusans,id',
-            'wali_kelas_id'  => 'nullable|exists:users,id',
+            'wali_kelas_id'  => 'required|exists:users,id',
         ]);
 
         Kelas::create($validated);
@@ -84,7 +86,9 @@ class KelasController extends Controller
         $kelas = Kelas::findOrFail($id);
         $jurusans = Jurusan::all();
 
-        $users = User::whereNotIn('id', Kelas::where('id', '!=', $id)->pluck('wali_kelas_id')->filter())->get();
+        $users = User::where('role', 'guru')
+            ->whereNotIn('id', Kelas::where('id', '!=', $id)->pluck('wali_kelas_id')->filter())
+            ->get();
 
         return view('master.kelas.edit', compact('kelas', 'jurusans', 'users'));
     }
@@ -95,7 +99,7 @@ class KelasController extends Controller
         $validated = $request->validate([
             'nama_kelas'     => 'required|string|max:50',
             'jurusan_id'     => 'required|exists:jurusans,id',
-            'wali_kelas_id'  => 'nullable|exists:users,id',
+            'wali_kelas_id'  => 'required|exists:users,id',
         ]);
 
         $kelas = Kelas::findOrFail($id);

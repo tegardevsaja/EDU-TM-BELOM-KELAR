@@ -13,6 +13,7 @@ class Pengguna extends Model
         'nama',
         'email',
         'nik',
+        'status',
     ];
     
     public function user()

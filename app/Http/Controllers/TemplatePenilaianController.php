@@ -36,7 +36,7 @@ class TemplatePenilaianController extends Controller
             'nama_template' => 'required|string|max:100',
             'deskripsi' => 'nullable|string',
             'komponen' => 'nullable|array',
-            'visibility' => 'nullable|in:admin,all',
+            'visibility' => 'nullable|in:admin,all,guru',
         ]);
 
         TemplatePenilaian::create([
@@ -68,7 +68,7 @@ class TemplatePenilaianController extends Controller
             'nama_template' => 'required|string|max:100',
             'deskripsi' => 'nullable|string',
             'komponen' => 'nullable|array',
-            'visibility' => 'nullable|in:admin,all',
+            'visibility' => 'nullable|in:admin,all,guru',
         ]);
 
         $template = TemplatePenilaian::findOrFail($id);

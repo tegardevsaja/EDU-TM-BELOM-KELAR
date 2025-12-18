@@ -21,7 +21,7 @@
                 <div class="absolute inset-0">
                     {{-- Background --}}
                     <div class="absolute inset-0 bg-cover bg-center" 
-                         style="background-image: url('{{ asset('storage/' . $template->background_image) }}')">
+                         style="background-image: url('{{ url('storage/' . $template->background_image) }}')">
                     </div>
                     
                     {{-- Elements --}}

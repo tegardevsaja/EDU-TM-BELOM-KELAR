@@ -1,4 +1,41 @@
 <x-layouts.app :title="__('Edit Data Siswa')">
+    {{-- Notifikasi (jika ada) --}}
+    @if(session('success') || session('error'))
+        <div class="max-w-4xl mx-auto mt-4 mb-4">
+            @if(session('success'))
+                <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)" x-transition
+                     class="flex items-start gap-2 rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:bg-emerald-900/40 dark:border-emerald-700 dark:text-emerald-100">
+                    <div class="mt-0.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-medium">Berhasil</p>
+                        <p class="text-xs mt-0.5">{{ session('success') }}</p>
+                    </div>
+                    <button type="button" class="text-emerald-700 hover:text-emerald-900 dark:text-emerald-200" @click="show = false">
+                        ✕
+                    </button>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" x-transition
+                     class="mt-2 flex items-start gap-2 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-900/40 dark:border-red-700 dark:text-red-100">
+                    <div class="mt-0.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01"/></svg>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-medium">Terjadi kesalahan</p>
+                        <p class="text-xs mt-0.5">{{ session('error') }}</p>
+                    </div>
+                    <button type="button" class="text-red-700 hover:text-red-900 dark:text-red-200" @click="show = false">
+                        ✕
+                    </button>
+                </div>
+            @endif
+        </div>
+    @endif
+
     <h2 class="text-xl font-semibold mb-6 dark:text-white">Edit Siswa</h2>
     <div class="h-full overflow-hidden shadow-md rounded p-2">
         
@@ -10,9 +47,10 @@
                 {{-- NIS --}}
                 <div class="flex flex-col">
                     <label class="font-medium text-sm">NIS</label>
-                    <input type="number" name="nis" value="{{ old('nis', $siswa->nis) }}"
+                    <input type="text" name="nis" value="{{ old('nis', $siswa->nis) }}"
                         class="px-3 py-2 rounded border dark:bg-zinc-700 dark:text-white"
-                        placeholder="Masukkan NIS" minlength="5" required> 
+                        placeholder="Masukkan NIS" inputmode="numeric" pattern="[0-9]*" maxlength="24"
+                        oninput="this.value=this.value.replace(/[^0-9]/g,'')" required>
                     @error('nis') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 </div>
     
@@ -83,7 +121,8 @@
                     <label class="font-medium text-sm">No HP Orang Tua</label>
                     <input type="text" name="no_hp_orang_tua" value="{{ old('no_hp_orang_tua', $siswa->no_hp_orang_tua) }}"
                         class="px-3 py-2 rounded border dark:bg-zinc-700 dark:text-white"
-                        placeholder="Nomor HP">
+                        placeholder="Nomor HP" inputmode="tel" pattern="[0-9]*" maxlength="18"
+                        oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                     @error('no_hp_orang_tua') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 </div>
     
@@ -183,4 +222,4 @@
         </div>
     </div>
 
-</x-layouts.app>
+</x-layouts.app>6

@@ -12,8 +12,8 @@ class UserController extends Controller
 {
     public function create(): View
     {
-        // Ambil pengguna yang belum punya akun
-        $penggunas = Pengguna::doesntHave('user')->get();
+        // Ambil pengguna yang belum punya akun dan AKTIF saja
+        $penggunas = Pengguna::doesntHave('user')->where('status', 'aktif')->get();
 
         // Daftar role sesuai enum
         $roles = ['master_admin', 'admin', 'guru'];
@@ -36,13 +36,21 @@ class UserController extends Controller
                 'name'  => 'required|string|max:100',
                 'email' => 'required|email|unique:users,email,' . $user->id,
                 'role'  => 'required|string',
+                'password' => 'nullable|string|min:8|confirmed',
             ]);
 
-            $user->update([
+            $updateData = [
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'role' => $validated['role'],
-            ]);
+            ];
+
+            // Update password if provided
+            if (!empty($validated['password'])) {
+                $updateData['password'] = bcrypt($validated['password']);
+            }
+
+            $user->update($updateData);
 
             // Sync Spatie role with enum/string role column so @role/@can works
             if (method_exists($user, 'syncRoles')) {
@@ -66,23 +74,31 @@ class UserController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'pengguna_id' => 'required|exists:penggunas,id',
-            'role' => 'required|in:master_admin,admin,guru',
-            'password' => 'required|string|min:6|confirmed',
-        ]);
+        try {
+            $validated = $request->validate([
+                'pengguna_id' => 'required|exists:penggunas,id',
+                'role' => 'required|in:master_admin,admin,guru',
+                'password' => 'required|string|min:8|confirmed',
+            ]);
 
-        $pengguna = Pengguna::findOrFail($validated['pengguna_id']);
+            $pengguna = Pengguna::findOrFail($validated['pengguna_id']);
+            if (($pengguna->status ?? 'aktif') !== 'aktif') {
+                return back()->withErrors(['pengguna_id' => 'Pengguna nonaktif tidak dapat dibuatkan akun.'])->withInput();
+            }
 
-        User::create([
-            'name' => $pengguna->nama,
-            'email' => $pengguna->email,
-            'pengguna_id' => $pengguna->id,
-            'role' => $validated['role'],
-            'password' => bcrypt($validated['password']),
-        ]);
+            $user = User::create([
+                'name' => $pengguna->nama,
+                'email' => $pengguna->email,
+                'pengguna_id' => $pengguna->id,
+                'role' => $validated['role'],
+                'password' => bcrypt($validated['password']),
+            ]);
 
-        return redirect()->route('master.users')->with('success', 'Akun berhasil dibuat!');
+            return redirect()->route('master.users')->with('success', 'Akun berhasil dibuat!');
+            
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()])->withInput();
+        }
     }
 
     public function index(): \Illuminate\View\View

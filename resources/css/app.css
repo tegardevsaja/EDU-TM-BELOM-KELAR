@@ -23,16 +23,23 @@
     --color-zinc-900: #171717;
     --color-zinc-950: #0a0a0a;
 
-    --color-accent: var(--color-neutral-800);
-    --color-accent-content: var(--color-neutral-800);
+    /* EDU TM brand-inspired light palette (modern, minimal) */
+    --color-primary: #8b5cf6; /* soft purple */
+    --color-primary-soft: #ede9fe; /* very light purple background */
+    --color-secondary: #f97316; /* orange accent */
+
+    /* Accent used by Flux components (buttons, focus rings, etc.) */
+    --color-accent: var(--color-primary);
+    --color-accent-content: var(--color-primary);
     --color-accent-foreground: var(--color-white);
 }
 
 @layer theme {
     .dark {
-        --color-accent: var(--color-white);
-        --color-accent-content: var(--color-white);
-        --color-accent-foreground: var(--color-neutral-800);
+        /* Keep dark mode neutral with subtle brand accent for good contrast */
+        --color-accent: #c4b5fd; /* lighter purple for dark backgrounds */
+        --color-accent-content: #e5e7eb; /* near-white text */
+        --color-accent-foreground: #020617; /* almost-black offset */
     }
 }
 
@@ -44,6 +51,29 @@
     ::backdrop,
     ::file-selector-button {
         border-color: var(--color-gray-200, currentColor);
+    }
+}
+
+/* Global hover for buttons and button-like elements */
+@layer base {
+    :where(button,[type="button"],[type="submit"],[role="button"],.btn,.button) {
+        @apply transition-all duration-200 ease-out;
+    }
+    :where(button,[type="button"],[type="submit"],[role="button"],.btn,.button):hover {
+        @apply -translate-y-0.5 shadow-md shadow-zinc-200/60 dark:shadow-zinc-950/40;
+    }
+    /* Anchor styled as button (rounded + padding) */
+    :where(a[class*="rounded"][class*="px-"][class*="py-"]) {
+        @apply transition-all duration-200 ease-out;
+    }
+    :where(a[class*="rounded"][class*="px-"][class*="py-"]):hover {
+        @apply -translate-y-0.5 shadow-md shadow-zinc-200/60 dark:shadow-zinc-950/40;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        :where(button,[type="button"],[type="submit"],[role="button"],.btn,.button,
+        a[class*="rounded"][class*="px-"][class*="py-"]) {
+            transition: none;
+        }
     }
 }
 

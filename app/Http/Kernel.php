@@ -38,6 +38,8 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             // Log aktivitas admin/guru
             \App\Http\Middleware\ActivityLogger::class,
+            // Pastikan akun hanya bisa mengakses saat Pengguna aktif
+            \App\Http\Middleware\EnsurePenggunaActive::class,
         ],
 
         'api' => [

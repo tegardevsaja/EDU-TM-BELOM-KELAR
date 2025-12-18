@@ -1,211 +1,552 @@
 <x-layouts.app :title="__('Master Admin Dashboard')">
-    <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl">
-        
-        <div>
-            <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Dashboard Overview</h2>
-            <p class="text-base text-gray-600 dark:text-gray-400 mt-1.5">Statistik dan ringkasan data sistem</p>
-        </div>
-
-        <div class="grid gap-4 md:grid-cols-3">
-            <div class="relative overflow-hidden rounded-xl bg-white dark:bg-zinc-800 p-6 shadow-sm">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Pengguna</p>
-                        <h3 class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $totalUsers }}</h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Akun terdaftar</p>
-                    </div>
-                    <div class="w-14 h-14 bg-blue-50 dark:bg-blue-900/50 rounded-lg flex items-center justify-center">
-                        <svg class="w-8 h-8 text-blue-500 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="relative overflow-hidden rounded-xl bg-white dark:bg-zinc-800 p-6 shadow-sm">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Siswa</p>
-                        <h3 class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $totalSiswa }}</h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Siswa terdaftar</p>
-                    </div>
-                    <div class="w-14 h-14 bg-green-50 dark:bg-green-900/50 rounded-lg flex items-center justify-center">
-                        <svg class="w-8 h-8 text-green-500 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="relative overflow-hidden rounded-xl bg-white dark:bg-zinc-800 p-6 shadow-sm">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Sertifikat Tercetak</p>
-                        <h3 class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $totalSertifikat }}</h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Total dicetak</p>
-                    </div>
-                    <div class="w-14 h-14 bg-purple-50 dark:bg-purple-900/50 rounded-lg flex items-center justify-center">
-                        <svg class="w-8 h-8 text-purple-500 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
+    <div class="flex h-full w-full flex-1 flex-col gap-6">
+        <!-- Welcome Banner -->
+        <div class="relative overflow-hidden rounded-2xl border border-zinc-200/60 dark:border-zinc-800/60 text-white">
+            <div class="h-44 sm:h-56 md:h-64 w-full flex items-center bg-cover bg-center" style="background-image: url('{{ asset('img/banner.jpg') }}'); background-position: center center;">
+                <div class="w-full h-full bg-gradient-to-r from-black/70 via-black/40 to-transparent flex items-center">
+                    <div class="px-6 md:px-10 max-w-2xl">
+                        <p class="text-xs sm:text-sm font-medium tracking-wide text-white/80 mb-1">Smart Academic Management With EDUTM CERTIFY</p>
+                        <h2 class="text-xl sm:text-2xl md:text-3xl font-bold mb-2">Kelola akademik sekolah secara modern dan terintegrasi</h2>
+                        <p class="text-[11px] sm:text-sm text-white/80 leading-relaxed">
+                            EDU TM membantu sekolah mengelola siswa, nilai, dan sertifikat dengan mudah,
+                            memberi admin dan guru cara sederhana untuk memantau perkembangan serta menjaga
+                            setiap data akademik tetap rapi.
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="grid gap-4 lg:grid-cols-2">
-            
-            <div class="relative overflow-hidden rounded-xl bg-white dark:bg-zinc-800 p-6 shadow-sm">
-                <div class="mb-6">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Distribusi Siswa Berdasarkan Jenis Kelamin</h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Persentase siswa laki-laki dan perempuan</p>
+        <!-- KPIs (3 cards) now handled by Livewire (no page refresh) -->
+        @livewire('dashboard-kpis')
+
+        <div class="grid gap-6 lg:grid-cols-3">
+            <!-- Analytics -->
+            <div class="lg:col-span-2 space-y-6">
+                <div class="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white dark:bg-zinc-900 p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-50">Statistik Siswa per Tahun</h3>
+                    </div>
+                    <canvas id="chartStudents" height="110"></canvas>
                 </div>
 
-                @if($totalSiswa > 0)
-                    <div class="flex flex-col items-center justify-center py-8">
-                        <div class="relative w-64 h-64">
-                            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                                <circle cx="50" cy="50" r="40" fill="none" stroke="#e5e7eb" stroke-width="20" class="dark:stroke-zinc-700"/>
-                                
-                                <circle cx="50" cy="50" r="40" fill="none" 
-                                        stroke="#3b82f6" 
-                                        stroke-width="20"
-                                        stroke-dasharray="{{ $malePercentage * 2.513 }} 251.3"
-                                        stroke-linecap="round"
-                                        class="transition-all duration-1000"/>
-                                
-                                <circle cx="50" cy="50" r="40" fill="none" 
-                                        stroke="#ec4899" 
-                                        stroke-width="20"
-                                        stroke-dasharray="{{ $femalePercentage * 2.513 }} 251.3"
-                                        stroke-dashoffset="{{ -$malePercentage * 2.513 }}"
-                                        stroke-linecap="round"
-                                        class="transition-all duration-1000"/>
-                            </svg>
-                            
-                            <div class="absolute inset-0 flex flex-col items-center justify-center">
-                                <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ $totalSiswa }}</p>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">Total Siswa</p>
-                            </div>
+                <div class="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white dark:bg-zinc-900 p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-50">Penilaian Terbaru</h3>
+                        <a href="{{ route('master.nilai.index') }}" class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Lihat semua</a>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead class="text-zinc-500 dark:text-zinc-400 text-xs">
+                                <tr>
+                                    <th class="text-left py-2 pr-4">Siswa</th>
+                                    <th class="text-left py-2 pr-4">NIS</th>
+                                    <th class="text-left py-2 pr-4">Kelas</th>
+                                    <th class="text-left py-2 pr-4">Jurusan</th>
+                                    <th class="text-left py-2 pr-4">Tanggal</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
+                                @forelse($recentPenilaian as $p)
+                                    <tr class="hover:bg-zinc-50/60 dark:hover:bg-zinc-800/60">
+                                        <td class="py-2 pr-4 text-zinc-900 dark:text-zinc-50">{{ $p->siswa->nama ?? '-' }}</td>
+                                        <td class="py-2 pr-4">{{ $p->siswa->nis ?? '-' }}</td>
+                                        <td class="py-2 pr-4">{{ optional($p->siswa->kelas)->nama_kelas ?? '-' }}</td>
+                                        <td class="py-2 pr-4">{{ optional($p->siswa->jurusan)->nama_jurusan ?? '-' }}</td>
+                                        <td class="py-2 pr-4">{{ $p->created_at->format('d M Y') }}</td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="5" class="py-6 text-center text-zinc-500">Belum ada penilaian</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white dark:bg-zinc-900 p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-50">Kelas Terbaru</h3>
                         </div>
+                        <div class="divide-y divide-zinc-100 dark:divide-zinc-800 text-xs text-zinc-600 dark:text-zinc-300">
+                            @forelse($recentKelas as $idx => $k)
+                                <div class="flex items-start gap-2 py-1.5">
+                                    <div class="mt-0.5 w-5 h-5 rounded-full bg-indigo-50 dark:bg-indigo-900/40 text-[10px] flex items-center justify-center text-indigo-600 dark:text-indigo-300">
+                                        {{ $idx + 1 }}
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="font-semibold text-zinc-900 dark:text-zinc-50 truncate">{{ $k->nama_kelas }}</p>
+                                        <p class="text-[11px] text-zinc-500">
+                                            {{ optional($k->jurusan)->nama_jurusan ?? '-' }} • Dibuat {{ optional($k->created_at)->format('d M Y') }}
+                                        </p>
+                                    </div>
+                                </div>
+                            @empty
+                                <p class="py-1.5 text-[11px] text-zinc-500">Belum ada data kelas.</p>
+                            @endforelse
+                        </div>
+                    </div>
 
-                        <div class="mt-8 flex gap-8">
+                    <div class="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white dark:bg-zinc-900 p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-50">Siswa Terbaru</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-xs">
+                                <thead class="text-zinc-500 dark:text-zinc-400 text-[11px]">
+                                    <tr>
+                                        <th class="text-left py-1.5 pr-3">Nama</th>
+                                        <th class="text-left py-1.5 pr-3">NIS</th>
+                                        <th class="text-left py-1.5 pr-3">Kelas</th>
+                                        <th class="text-left py-1.5 pr-3">Terdaftar</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                                    @forelse($recentSiswa as $s)
+                                        <tr class="hover:bg-zinc-50/60 dark:hover:bg-zinc-800/60">
+                                            <td class="py-1.5 pr-3 text-zinc-900 dark:text-zinc-50 truncate">{{ $s->nama }}</td>
+                                            <td class="py-1.5 pr-3">{{ $s->nis ?? '-' }}</td>
+                                            <td class="py-1.5 pr-3">{{ optional($s->kelas)->nama_kelas ?? '-' }}</td>
+                                            <td class="py-1.5 pr-3">{{ optional($s->created_at)->format('d M Y') }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="py-3 text-center text-[11px] text-zinc-500">Belum ada data siswa.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Side widgets -->
+            <div class="space-y-6">
+                <div class="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white dark:bg-zinc-900 p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-50">Progress Penilaian</h3>
+                    </div>
+                    <canvas id="chartProgress" height="160"></canvas>
+                </div>
+
+                <div class="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white dark:bg-zinc-900 p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-50">Pengguna</h3>
+                    </div>
+                    <div class="space-y-3">
+                        @forelse($recentUsers as $u)
                             <div class="flex items-center gap-3">
-                                <div class="w-4 h-4 rounded-full bg-blue-500"></div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-900 dark:text-white">Laki-laki</p>
-                                    <p class="text-2xl font-bold text-blue-500 dark:text-blue-400">{{ number_format($malePercentage, 1) }}%</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ $totalMale }} siswa</p>
+                                <div class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-300 text-xs font-semibold">
+                                    {{ strtoupper(substr($u->name,0,1)) }}
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-sm text-zinc-900 dark:text-zinc-50 truncate">{{ $u->name }}</p>
+                                    <p class="text-xs text-zinc-500 truncate">Bergabung {{ $u->created_at->format('d M Y') }}</p>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-3">
-                                <div class="w-4 h-4 rounded-full bg-pink-500"></div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-900 dark:text-white">Perempuan</p>
-                                    <p class="text-2xl font-bold text-pink-500 dark:text-pink-400">{{ number_format($femalePercentage, 1) }}%</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ $totalFemale }} siswa</p>
-                                </div>
-                            </div>
-                        </div>
+                        @empty
+                            <p class="text-sm text-zinc-500">Belum ada data pengguna yang tampil.</p>
+                        @endforelse
                     </div>
-                @else
-                    <div class="text-center py-12 text-gray-500 dark:text-gray-400">
-                        <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                        </svg>
-                        <p class="text-lg font-medium">Belum ada data siswa</p>
-                        <p class="text-sm mt-1">Tambahkan siswa untuk melihat statistik</p>
-                    </div>
-                @endif
-            </div>
-
-            <div class="relative overflow-hidden rounded-xl bg-white dark:bg-zinc-800 p-6 shadow-sm">
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Daftar Pengguna Terbaru</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ $recentUsers->count() }} pengguna terdaftar terakhir</p>
-                    </div>
-                    <a href="{{ route('master.users') }}" class="text-sm text-blue-600 dark:text-blue-400 hover:underline">
-                        Lihat Semua →
-                    </a>
                 </div>
 
-                <div class="space-y-3 max-h-96 overflow-y-auto">
-                    @forelse($recentUsers as $user)
-                        <div class="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors">
-                            <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-zinc-700 flex items-center justify-center text-gray-600 dark:text-gray-300 font-semibold">
-                                {{ strtoupper(substr($user->name, 0, 1)) }}
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ $user->name }}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ $user->email }}</p>
-                            </div>
-                           <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-    @if($user->role === \App\Enums\UserRole::Master) bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300
-    @elseif($user->role === \App\Enums\UserRole::Admin) bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300
-    @elseif($user->role === \App\Enums\UserRole::Guru) bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300
-    @else bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300
-    @endif">
-    {{ ucfirst(str_replace('_', ' ', $user->role->value)) }}
-</span>
+                <div class="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white dark:bg-zinc-900 p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-50">Ringkasan Sekolah</h3>
+                    </div>
+                    <dl class="text-xs space-y-1 text-zinc-600 dark:text-zinc-300">
+                        <div class="flex justify-between">
+                            <dt>Jumlah jurusan</dt>
+                            <dd class="font-semibold text-zinc-900 dark:text-zinc-50">{{ $totalJurusan }}</dd>
                         </div>
-                    @empty
-                        <div class="text-center py-8 text-gray-500 dark:text-gray-400">
-                            <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                            </svg>
-                            <p>Belum ada pengguna</p>
+                        <div class="flex justify-between">
+                            <dt>Jumlah kelas</dt>
+                            <dd class="font-semibold text-zinc-900 dark:text-zinc-50">{{ $totalKelas }}</dd>
                         </div>
-                    @endforelse
+                        <div class="flex justify-between">
+                            <dt>Tahun ajaran terdaftar</dt>
+                            <dd class="font-semibold text-zinc-900 dark:text-zinc-50">{{ $totalTahunAjaran }}</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt>Template sertifikat</dt>
+                            <dd class="font-semibold text-zinc-900 dark:text-zinc-50">{{ $totalTemplateSertifikat }}</dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <div class="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white dark:bg-zinc-900 p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-50">Kalender</h3>
+                        <div class="flex items-center gap-2 text-sm">
+                            <button id="calPrev" class="px-2 py-1 border rounded">‹</button>
+                            <div id="calTitle" class="min-w-[120px] text-center"></div>
+                            <button id="calNext" class="px-2 py-1 border rounded">›</button>
+                        </div>
+                    </div>
+                    <p id="calTodayLabel" class="text-[11px] text-zinc-500 dark:text-zinc-400 mb-2"></p>
+                    <div class="grid grid-cols-7 gap-1 text-center text-[11px] mb-1 text-zinc-500 dark:text-zinc-400">
+                        <div>Sen</div>
+                        <div>Sel</div>
+                        <div>Rab</div>
+                        <div>Kam</div>
+                        <div>Jum</div>
+                        <div>Sab</div>
+                        <div>Min</div>
+                    </div>
+                    <div id="calendarGrid" class="grid grid-cols-7 gap-1 text-center text-xs"></div>
+                    <div id="calendarLegend" class="mt-2 text-[11px] text-zinc-600 dark:text-zinc-300 space-y-1"></div>
                 </div>
             </div>
         </div>
 
-        <div class="grid gap-4 md:grid-cols-3">
-            <div class="rounded-xl bg-white dark:bg-zinc-800 p-6 shadow-sm">
-                <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $siswaAktif }}</p>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Siswa Aktif</p>
-                    </div>
-                </div>
-            </div>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            const totalPerYear = {!! json_encode(($studentsPerYear ?? collect())->toArray()) !!};
+            const malePerYear = {!! json_encode(($studentsPerYearMale ?? collect())->toArray()) !!};
+            const femalePerYear = {!! json_encode(($studentsPerYearFemale ?? collect())->toArray()) !!};
 
-            <div class="rounded-xl bg-white dark:bg-zinc-800 p-6 shadow-sm">
-                <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 14l9-5-9-5-9 5 9 5z"/>
-                            <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $siswaLulus }}</p>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Siswa Lulus</p>
-                    </div>
-                </div>
-            </div>
+            // Label tahun ajaran langsung dari data yang ada, diurutkan dari tahun awal terkecil
+            let labels = Object.keys(totalPerYear || {});
+            labels = labels.sort((a, b) => {
+                const ay = parseInt((a || '').split('/')[0]);
+                const by = parseInt((b || '').split('/')[0]);
+                if (isNaN(ay) || isNaN(by)) return 0;
+                return ay - by;
+            });
 
-            <div class="rounded-xl bg-white dark:bg-zinc-800 p-6 shadow-sm">
-                <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $siswaPindahKeluar }}</p>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Pindah/Keluar</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+            const dataTotal = labels.map(y => totalPerYear[y] ?? 0);
+            const dataMale = labels.map(y => malePerYear[y] ?? 0);
+            const dataFemale = labels.map(y => femalePerYear[y] ?? 0);
 
+            // Hitung skala dinamis untuk sumbu Y berdasarkan nilai maksimum
+            const maxVal = Math.max(
+                ...(dataTotal.length ? dataTotal : [0]),
+                ...(dataMale.length ? dataMale : [0]),
+                ...(dataFemale.length ? dataFemale : [0])
+            );
+            const niceMax = maxVal > 0 ? Math.ceil(maxVal / 10) * 10 : 10;
+            const gridLines = 5;
+            const stepSize = Math.max(1, Math.round(niceMax / gridLines));
+            const ctx1 = document.getElementById('chartStudents');
+            if (ctx1) {
+                new Chart(ctx1, {
+                    type: 'line',
+                    data: {
+                        labels,
+                        datasets: [
+                            {
+                                label: 'Total siswa',
+                                data: dataTotal,
+                                borderColor: '#8b5cf6',
+                                backgroundColor: 'rgba(139,92,246,0.15)',
+                                borderWidth: 3,
+                                tension: .35,
+                                fill: true
+                            },
+                            {
+                                label: 'Laki-laki',
+                                data: dataMale,
+                                borderColor: '#0ea5e9',
+                                backgroundColor: 'rgba(14,165,233,0.10)',
+                                borderWidth: 2,
+                                borderDash: [6, 4],
+                                tension: .35,
+                                fill: false
+                            },
+                            {
+                                label: 'Perempuan',
+                                data: dataFemale,
+                                borderColor: '#ec4899',
+                                backgroundColor: 'rgba(236,72,153,0.10)',
+                                borderWidth: 2,
+                                borderDash: [4, 4],
+                                tension: .35,
+                                fill: false
+                            }
+                        ]
+                    },
+                    options: {
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'bottom',
+                                labels: {
+                                    boxWidth: 10,
+                                    boxHeight: 10,
+                                    color: '#6b7280',
+                                    font: { size: 11 }
+                                }
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                callbacks: {
+                                    title: (items) => {
+                                        const idx = items[0]?.dataIndex ?? 0;
+                                        const raw = labels[idx] ?? '';
+                                        return raw;
+                                    },
+                                    label: (ctx) => `${ctx.dataset.label}: ${ctx.formattedValue} siswa`
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                suggestedMax: niceMax,
+                                ticks: {
+                                    stepSize: stepSize,
+                                    precision: 0,
+                                    color: '#9ca3af',
+                                    font: { size: 10 }
+                                },
+                                grid: {
+                                    color: 'rgba(148,163,184,0.25)',
+                                    drawBorder: false
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: '#9ca3af',
+                                    font: { size: 10 },
+                                    callback: (value) => {
+                                        // value = index for category scale
+                                        const raw = labels[value] ?? '';
+                                        return raw;
+                                    }
+                                },
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Plugin untuk menampilkan teks di tengah donut
+            const centerTextPlugin = {
+                id: 'centerText',
+                beforeDraw(chart, args, options) {
+                    if (!options?.text) return;
+                    const {ctx, chartArea: {width, height}} = chart;
+                    ctx.save();
+                    ctx.font = options.font || '600 14px system-ui';
+                    ctx.fillStyle = options.color || '#111827';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(options.text, width / 2, height / 2);
+                    ctx.restore();
+                }
+            };
+
+            Chart.register(centerTextPlugin);
+
+            // Toggle menu filter Sertifikat Tercetak (titik tiga)
+            const certToggle = document.getElementById('certFilterToggle');
+            const certMenu = document.getElementById('certFilterMenu');
+            if (certToggle && certMenu) {
+                certToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    certMenu.classList.toggle('hidden');
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (!certMenu.classList.contains('hidden') && !certMenu.contains(e.target)) {
+                        certMenu.classList.add('hidden');
+                    }
+                });
+            }
+
+            // Toggle menu filter Total Siswa (gender)
+            const siswaToggle = document.getElementById('siswaFilterToggle');
+            const siswaMenu = document.getElementById('siswaFilterMenu');
+            if (siswaToggle && siswaMenu) {
+                siswaToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    siswaMenu.classList.toggle('hidden');
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (!siswaMenu.classList.contains('hidden') && !siswaMenu.contains(e.target) && e.target !== siswaToggle) {
+                        siswaMenu.classList.add('hidden');
+                    }
+                });
+            }
+
+            // Toggle menu filter Total Pengguna (role)
+            const userToggle = document.getElementById('userFilterToggle');
+            const userMenu = document.getElementById('userFilterMenu');
+            if (userToggle && userMenu) {
+                userToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    userMenu.classList.toggle('hidden');
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (!userMenu.classList.contains('hidden') && !userMenu.contains(e.target) && e.target !== userToggle) {
+                        userMenu.classList.add('hidden');
+                    }
+                });
+            }
+
+            const ctx2 = document.getElementById('chartProgress');
+            if (ctx2) {
+                new Chart(ctx2, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Sudah dinilai','Belum'],
+                        datasets: [{
+                            data: [{{ $percentGraded }}, {{ max(0, 100 - $percentGraded) }}],
+                            backgroundColor: ['#22c55e','#e5e7eb']
+                        }]
+                    },
+                    options: {
+                        plugins: {
+                            legend: { position: 'bottom' },
+                            centerText: {
+                                text: '{{ $percentGraded }}%',
+                                color: '#16a34a',
+                                font: '700 18px system-ui'
+                            }
+                        },
+                        cutout: '70%'
+                    }
+                });
+            }
+
+            // Cache libur per tahun (diisi dari API api-harilibur.vercel.app)
+            const holidaysByYear = {};
+
+            async function loadHolidays(year) {
+                if (holidaysByYear[year]) return holidaysByYear[year];
+                try {
+                    const resp = await fetch(`https://api-harilibur.vercel.app/api?year=${year}`);
+                    if (!resp.ok) throw new Error('Gagal memuat data hari libur');
+                    const data = await resp.json();
+                    const map = {};
+                    const national = new Set();
+                    data.forEach(item => {
+                        // Normalisasi tanggal ke YYYY-MM-DD (kadang tanpa nol di bulan/tanggal)
+                        let iso = String(item.holiday_date || '').trim();
+                        if (!iso) return;
+                        const parts = iso.split('-');
+                        if (parts.length === 3) {
+                            const y = parts[0];
+                            const m = String(parts[1]).padStart(2,'0');
+                            const d = String(parts[2]).padStart(2,'0');
+                            iso = `${y}-${m}-${d}`;
+                        }
+                        map[iso] = item.holiday_name || '';
+                        if (item.is_national_holiday) national.add(iso);
+                    });
+                    holidaysByYear[year] = { map, national };
+                    return holidaysByYear[year];
+                } catch (e) {
+                    console.error('Error memuat hari libur:', e);
+                    holidaysByYear[year] = { map: {}, national: new Set() };
+                    return holidaysByYear[year];
+                }
+            }
+
+            let calDate = new Date();
+            async function renderCalendar(d){
+                const grid = document.getElementById('calendarGrid');
+                const title = document.getElementById('calTitle');
+                const legend = document.getElementById('calendarLegend');
+                const todayLabel = document.getElementById('calTodayLabel');
+                if(!grid||!title||!legend) return;
+                grid.innerHTML = '';
+                legend.innerHTML = '';
+
+                const y = d.getFullYear(), m = d.getMonth();
+
+                // Pastikan data libur tahun ini sudah dimuat
+                const { map: indoHolidays, national: nationalHolidayDates } = await loadHolidays(y);
+                title.textContent = d.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+                const first = new Date(y,m,1); const last = new Date(y,m+1,0);
+                const start = first.getDay() === 0 ? 7 : first.getDay();
+                const today = new Date();
+                const daysInMonth = last.getDate();
+
+                if (todayLabel) {
+                    todayLabel.textContent = 'Hari ini: ' + today.toLocaleDateString('id-ID', {
+                        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+                    });
+                }
+
+                // Kumpulkan libur pada bulan yang sedang ditampilkan
+                const monthStr = String(m+1).padStart(2,'0');
+                const holidayEntries = [];
+
+                for (const [iso, name] of Object.entries(indoHolidays)) {
+                    if (iso.startsWith(y + '-' + monthStr)) {
+                        const day = parseInt(iso.split('-')[2], 10);
+                        holidayEntries.push({ day, name, iso });
+                    }
+                }
+
+                for(let i=1;i<start;i++){
+                    const cell=document.createElement('div');
+                    cell.className='py-1 text-zinc-400';
+                    cell.textContent='';
+                    grid.appendChild(cell);
+                }
+
+                for(let dnum=1; dnum<=daysInMonth; dnum++){
+                    const cell=document.createElement('div');
+                    const isToday = dnum===today.getDate() && m===today.getMonth() && y===today.getFullYear();
+                    const iso = `${y}-${String(m+1).padStart(2,'0')}-${String(dnum).padStart(2,'0')}`;
+                    const holidayName = indoHolidays[iso] ?? null;
+                    const isNationalHoliday = holidayName && nationalHolidayDates.has(iso);
+                    const dayObj = new Date(y, m, dnum);
+                    const dow = dayObj.getDay(); // 0 = Minggu, 6 = Sabtu
+
+                    let baseClass = 'py-1 rounded border ';
+                    if (dow === 0) { // Hanya Minggu
+                        baseClass += 'border-red-400 ';
+                    } else {
+                        baseClass += 'border-transparent ';
+                    }
+                    if (isNationalHoliday) {
+                        // Libur nasional: merah jelas
+                        baseClass += 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 font-semibold ';
+                    } else if (holidayName) {
+                        // Hari penting non-nasional: tandai lebih halus
+                        baseClass += 'text-blue-600 dark:text-blue-300 font-semibold ';
+                    } else if (isToday) {
+                        baseClass += 'bg-indigo-600 text-white ring-2 ring-indigo-400 ';
+                    } else {
+                        baseClass += 'hover:bg-zinc-100 dark:hover:bg-zinc-800 ';
+                    }
+
+                    cell.className = baseClass;
+                    cell.textContent = dnum;
+                    grid.appendChild(cell);
+                }
+
+                if (holidayEntries.length) {
+                    const heading = document.createElement('div');
+                    heading.textContent = 'Hari libur bulan ini:';
+                    heading.className = 'font-semibold';
+                    legend.appendChild(heading);
+
+                    holidayEntries.sort((a,b) => a.day - b.day).forEach(h => {
+                        const row = document.createElement('div');
+                        row.textContent = `${h.day} - ${h.name}`;
+                        legend.appendChild(row);
+                    });
+                } else {
+                    const row = document.createElement('div');
+                    row.textContent = 'Tidak ada hari libur nasional pada bulan ini (data lokal).';
+                    legend.appendChild(row);
+                }
+            }
+            renderCalendar(calDate);
+            const prev=document.getElementById('calPrev'); const next=document.getElementById('calNext');
+            if(prev){ prev.addEventListener('click', ()=>{ calDate.setMonth(calDate.getMonth()-1); renderCalendar(calDate); }); }
+            if(next){ next.addEventListener('click', ()=>{ calDate.setMonth(calDate.getMonth()+1); renderCalendar(calDate); }); }
+        </script>
     </div>
 </x-layouts.app>

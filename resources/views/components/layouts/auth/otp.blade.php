@@ -2,7 +2,6 @@
     <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
     <head>
         @include('partials.head')
-        <link rel="icon" href="{{ asset('logo/favicon.png') }}">
     </head>
 
     <body class="bg-white dark:bg-zinc-800 antialiased dark:bg-gradient-to-b dark:from-neutral-950 dark:to-neutral-900">

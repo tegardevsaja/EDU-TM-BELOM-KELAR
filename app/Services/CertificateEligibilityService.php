@@ -10,9 +10,12 @@ class CertificateEligibilityService
 {
     /**
      * Return true if siswa eligible untuk sertifikat pada tahun ajaran tertentu.
-     * Aturan default: alfa > $threshold => tidak eligible, kecuali ada override granted.
+     * Default rules:
+     * - alfa must be <= $alfaThreshold (default 3)
+     * - (sakit + izin) must be <= $excusedThreshold (default 5)
+     * - override granted bypasses these checks
      */
-    public function isEligible(Siswa $siswa, ?int $tahunAjaranId = null, int $threshold = 3): bool
+    public function isEligible(Siswa $siswa, ?int $tahunAjaranId = null, int $alfaThreshold = 3, int $excusedThreshold = 5): bool
     {
         // Cek override
         $override = CertificateOverride::where('siswa_id', $siswa->id)
@@ -32,11 +35,21 @@ class CertificateEligibilityService
             return true;
         }
 
-        $alfaCount = AttendanceRecord::whereIn('session_id', $sessionIds)
-            ->where('siswa_id', $siswa->id)
-            ->where('status', 'alfa')
-            ->count();
+        $baseQuery = AttendanceRecord::whereIn('session_id', $sessionIds)
+            ->where('siswa_id', $siswa->id);
 
-        return $alfaCount <= $threshold;
+        $alfaCount = (clone $baseQuery)->where('status', 'alfa')->count();
+        $sakitCount = (clone $baseQuery)->where('status', 'sakit')->count();
+        $izinCount  = (clone $baseQuery)->where('status', 'izin')->count();
+
+        if ($alfaCount > $alfaThreshold) {
+            return false;
+        }
+
+        if (($sakitCount + $izinCount) > $excusedThreshold) {
+            return false;
+        }
+
+        return true;
     }
 }

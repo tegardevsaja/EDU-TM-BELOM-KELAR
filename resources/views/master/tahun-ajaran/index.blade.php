@@ -23,11 +23,6 @@
             @endcan
         </div>
 
-        @if(session('success'))
-            <div class="mb-4 p-2 bg-green-100 text-green-700 rounded">
-                {{ session('success') }}
-            </div>
-        @endif
         <table class="min-w-full text-sm text-left border">
             <thead class="border-b bg-gray-50 text-gray-700 uppercase text-xs">
                 <tr>
@@ -62,11 +57,15 @@
                             @endcan
                             
                             @can('tahunAjaran.delete')
-                            <form action="{{ route($routePrefix . '.tahun-ajaran.destroy', $item->id) }}" method="POST" class="inline-block"
-                                  onsubmit="return confirm('Yakin hapus data ini?')">
+                            <form action="{{ route($routePrefix . '.tahun-ajaran.destroy', $item->id) }}" method="POST" class="inline-block">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">
+                                <button type="button" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                                        data-confirm-delete
+                                        data-name="{{ $item->tahun_ajaran }}"
+                                        data-title="Hapus Tahun Ajaran?"
+                                        data-confirm-label="Ya, hapus"
+                                        data-cancel-label="Batal">
                                     Hapus
                                 </button>
                             </form>

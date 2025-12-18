@@ -41,12 +41,6 @@
                         <button type="button" class="rounded border px-3 py-1.5 text-sm" onclick="setBulk('sakit')">Tandai Sakit</button>
                         <button type="button" class="rounded border px-3 py-1.5 text-sm" onclick="setBulk('izin')">Tandai Izin</button>
                     </div>
-                    <div>
-                        @if(!$session->locked)
-                        <button type="submit" class="rounded bg-blue-600 px-4 py-2 text-white" onclick="document.getElementById('lock_flag').value='';">Simpan Perubahan</button>
-                        <button type="button" class="ml-2 rounded bg-zinc-800 px-4 py-2 text-white" onclick="submitAndLock()">Simpan & Kunci</button>
-                        @endif
-                    </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
@@ -88,6 +82,12 @@
                         </tbody>
                     </table>
                 </div>
+
+                @if(!$session->locked)
+                    <div class="border-t bg-white dark:bg-zinc-800 px-4 py-3 flex justify-end">
+                        <button type="submit" class="rounded bg-blue-600 px-4 py-2 text-white" onclick="document.getElementById('lock_flag').value='';">Simpan Perubahan</button>
+                    </div>
+                @endif
             </div>
         </form>
 

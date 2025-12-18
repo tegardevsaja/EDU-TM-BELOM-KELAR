@@ -12,7 +12,9 @@
 @endphp
 
 <x-layouts.app :title="__('Absensi Kelas')">
+   
     <div class="p-6">
+        
         <div class="flex items-center justify-between mb-4">
             <h1 class="text-lg font-semibold">Absensi per Kelas</h1>
             @can('absensi.create')
@@ -77,10 +79,15 @@
                                             @endif
                                             @endcan
                                             @can('absensi.delete')
-                                            <form action="{{ route($routePrefix . '.absensi.destroy', $s->id) }}" method="POST" onsubmit="return confirm('Hapus sesi ini?')">
+                                            <form action="{{ route($routePrefix . '.absensi.destroy', $s->id) }}" method="POST">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button class="rounded bg-red-600 text-white px-3 py-1.5 text-xs">Hapus</button>
+                                                <button type="button" class="rounded bg-red-600 text-white px-3 py-1.5 text-xs"
+                                                        data-confirm-delete
+                                                        data-name="{{ $s->kelas->nama_kelas ?? 'sesi ini' }} ({{ $s->tanggal->format('d M Y') }})"
+                                                        data-title="Hapus Sesi Absensi?"
+                                                        data-confirm-label="Ya, hapus"
+                                                        data-cancel-label="Batal">Hapus</button>
                                             </form>
                                             @endcan
                                         </div>

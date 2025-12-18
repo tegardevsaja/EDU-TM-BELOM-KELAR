@@ -31,7 +31,8 @@
                 </div>
                 <div>
                     <label class="mb-1 block text-sm font-medium">Tanggal</label>
-                    <input type="date" name="tanggal" value="{{ $today }}" required class="w-full rounded border px-3 py-2" />
+                    <input type="date" name="tanggal" id="tanggal_absensi" value="{{ $today }}" required class="w-full rounded border px-3 py-2" min="{{ $today }}" />
+                    <p id="tanggal_absensi_error" class="mt-1 text-xs text-red-600 hidden"></p>
                     @error('tanggal')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div>
@@ -49,9 +50,48 @@
                 </div>
                 <div class="border-t bg-zinc-50 p-4 text-right dark:bg-zinc-900">
                     <a href="{{ route($routePrefix . '.absensi') }}" class="rounded border px-4 py-2">Batal</a>
-                    <button class="ml-2 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">Lanjut</button>
+                    <button id="btn_submit_absensi" class="ml-2 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">Lanjut</button>
                 </div>
             </form>
         </div>
     </div>
+    <script>
+        (function() {
+            const inputTanggal = document.getElementById('tanggal_absensi');
+            const btnSubmit = document.getElementById('btn_submit_absensi');
+            const errorEl = document.getElementById('tanggal_absensi_error');
+            if (!inputTanggal || !btnSubmit || !errorEl) return;
+
+            const todayStr = inputTanggal.getAttribute('min') || inputTanggal.value;
+            const today = new Date(todayStr);
+            today.setHours(0, 0, 0, 0);
+
+            function validateTanggal() {
+                const val = inputTanggal.value;
+                if (!val) {
+                    btnSubmit.disabled = true;
+                    errorEl.textContent = '';
+                    errorEl.classList.add('hidden');
+                    return;
+                }
+
+                const d = new Date(val);
+                d.setHours(0, 0, 0, 0);
+
+                if (d < today) {
+                    btnSubmit.disabled = true;
+                    errorEl.textContent = 'Tanggal absensi tidak boleh sebelum hari ini.';
+                    errorEl.classList.remove('hidden');
+                } else {
+                    btnSubmit.disabled = false;
+                    errorEl.textContent = '';
+                    errorEl.classList.add('hidden');
+                }
+            }
+
+            validateTanggal();
+            inputTanggal.addEventListener('change', validateTanggal);
+            inputTanggal.addEventListener('input', validateTanggal);
+        })();
+    </script>
 </x-layouts.app>

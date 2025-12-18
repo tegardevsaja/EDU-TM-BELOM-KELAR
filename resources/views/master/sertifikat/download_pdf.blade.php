@@ -43,8 +43,7 @@
             position: absolute;
             white-space: pre-wrap;
             word-wrap: break-word;
-            transform: translate(-50%, -50%);
-            min-width: 100px;
+            min-width: 0;
         }
     </style>
 </head>
@@ -74,6 +73,7 @@
         $__scale = $__a4_px / $__canvas_px; // ~1.122
     @endphp
     @foreach($siswas as $siswa)
+    @if(empty($only_grades))
     <div class="certificate-page">
         {{-- Background Image dengan Base64 --}}
         @if($imageData)
@@ -91,45 +91,89 @@
                     if($element['type'] === 'text') {
                         $content = $element['content'];
                     } elseif($element['type'] === 'variable') {
-                        $content = match($element['variable']) {
+                        $var = (string)($element['variable'] ?? '');
+                        $norm = preg_replace('/[^a-z]/', '', strtolower($var));
+                        $content = match($var) {
                             '$nama_siswa' => $siswa->nama ?? '',
+                            '$Nama' => $siswa->nama ?? '',
                             '$kelas' => $siswa->kelas->nama_kelas ?? '',
                             '$nis' => $siswa->nis ?? '',
                             '$tanggal' => ($siswa->tanggal_custom ?? null) ? \Carbon\Carbon::parse($siswa->tanggal_custom)->locale('id')->isoFormat('D MMMM YYYY') : now()->locale('id')->isoFormat('D MMMM YYYY'),
                             '$jurusan' => $siswa->kelas->jurusan->nama_jurusan ?? '',
                             '$nilai' => $siswa->nilai ?? '-',
                             '$peringkat' => $siswa->peringkat ?? '-',
+                            '$nomor_sertifikat' => $siswa->cert_number ?? '',
+                            '$no_sertifikat' => $siswa->cert_number ?? '',
+                            '$no_sertif' => $siswa->cert_number ?? '',
+                            '$nomor' => $siswa->cert_number ?? '',
                             '$ttd' => '(Tanda Tangan)',
-                            default => ($element['value'] ?? $element['variable'] ?? '')
+                            default => (
+                                    // nomor sertifikat fuzzy
+                                    (str_contains($norm, 'nomorsertifikat') || str_contains($norm, 'nosertifikat') || str_contains($norm, 'nosertif'))
+                                ) ? ($siswa->cert_number ?? '')
+                                  : (
+                                    // nama fuzzy ($Nama, $nama, $NamaSiswa, dsb)
+                                    (str_contains($norm, 'namasiswa') || $norm === 'nama') ? ($siswa->nama ?? '')
+                                    : ($element['value'] ?? $element['variable'] ?? '')
+                                  )
                         };
                     } elseif($element['type'] === 'image') {
                         $content = ''; // Image will be rendered separately
                     }
                     
-                    // Gunakan font size yang sama dengan preview, dengan scaling ke A4 px
                     $fontSize = ($element['fontSize'] ?? 24) * $__scale;
-                    
-                    // Posisi berdasarkan titik tengah (sama seperti customize/preview)
+
                     $x = $element['x'] ?? 50;
                     $y = $element['y'] ?? 50;
                     $align = $element['align'] ?? 'center';
+                    $isNameVariable = isset($var) && (in_array($var, ['$', '$nama_siswa', '$Nama'], true) || str_contains(strtolower($var), 'nama'));
                 @endphp
                 
                 @if($element['type'] === 'image')
                     {{-- Image Element --}}
+                    @php $tx = $align === 'left' ? '0' : ($align === 'right' ? '-100%' : '-50%'); @endphp
                     <img src="{{ $element['src'] ?? '' }}" 
-                         style="position: absolute; left: {{ $x }}%; top: {{ $y }}%; transform: translate(-50%, -50%); width: {{ $element['width'] ?? 100 }}px; height: {{ $element['height'] ?? 100 }}px; object-fit: contain;"
+                         style="position: absolute; left: {{ $x }}%; top: {{ $y }}%; transform: translate({{ $tx }}, -50%); width: {{ $element['width'] ?? 100 }}px; height: {{ $element['height'] ?? 100 }}px; object-fit: contain;"
                          alt="Uploaded Image">
                 @else
                     {{-- Text/Variable Element --}}
+                    @php 
+                        // Untuk teks biasa, pertahankan perilaku lama (-80%) agar sama dengan preview.
+                        // Untuk variabel nama, atur berdasarkan jumlah kata supaya tetap terlihat center.
+                        if ($isNameVariable) {
+                            $wordCount = is_string($content) ? str_word_count(trim($content)) : 0;
+
+                            $tx = '-50%';
+                            // Atur margin-left per jumlah kata, bisa disesuaikan lagi jika perlu.
+                            if ($wordCount <= 1) {
+                                $extraMarginLeft = '2.3rem';
+                            } elseif ($wordCount === 2) {
+                                $extraMarginLeft = '2.6rem';
+                            } elseif ($wordCount === 3) {
+                                $extraMarginLeft = '3.6rem';
+                            } elseif ($wordCount === 4) {
+                                $extraMarginLeft = '3.2rem';
+                            } elseif ($wordCount <= 6) {
+                                $extraMarginLeft = '5rem';
+                            } else {
+                                $extraMarginLeft = '4rem';
+                            }
+                        } else {
+                            $tx = $align === 'left' ? '0' : ($align === 'right' ? '-100%' : '-80%'); 
+                            $extraMarginLeft = '0';
+                        }
+                    @endphp
                     <div class="element" style="
                         left: {{ $x }}%;
                         top: {{ $y }}%;
                         text-align: {{ $align }};
+                        transform: translate({{ $tx }}, -50%);
                         font-size: {{ $fontSize }}px;
                         font-family: {{ $element['fontFamily'] ?? 'Arial' }}, sans-serif;
                         color: {{ $element['color'] ?? '#000000' }};
                         font-weight: {{ ($element['bold'] ?? false) ? 'bold' : 'normal' }};
+                        margin-left: {{ $extraMarginLeft }};
+                        {{ $isNameVariable ? 'white-space: nowrap; word-wrap: normal;' : '' }}
                     ">{{ $content }}</div>
                 @endif
             @endforeach
@@ -149,58 +193,58 @@
             </div>
         @endif
     </div>
-    @if(isset($siswa->nilai_detail_map) && is_array($siswa->nilai_detail_map) && !empty($siswa->nilai_detail_map))
-    <div class="certificate-page">
-        <div style="position:absolute; left: 5%; top: 5%; right:5%; bottom:5%;">
-            <h2 style="text-align:center; margin-bottom: 16px;">Lampiran Nilai - {{ $siswa->nama }}</h2>
-
-            {{-- Ringkasan --}}
-            @php $cmp = $siswa->nilai_computed ?? []; @endphp
-            <div style="margin-bottom: 14px; font-size: 14px;">
-                @if(isset($cmp['total']))<span style="margin-right:16px;">Total: {{ $cmp['total'] }}</span>@endif
-                @if(isset($cmp['avg']))<span style="margin-right:16px;">Rata-rata: {{ $cmp['avg'] }}</span>@endif
-                @if(isset($cmp['weighted_avg']))<span style="margin-right:16px;">Rata-rata Berbobot: {{ $cmp['weighted_avg'] }}</span>@endif
-                @if(isset($cmp['grade']))<span style="margin-right:16px;">Predikat: {{ $cmp['grade'] }}</span>@endif
-            </div>
-
-            {{-- Tabel Nilai --}}
-            <table style="width:100%; border-collapse: collapse; font-size: 13px;">
-                <thead>
-                    <tr>
-                        <th style="border:1px solid #000; padding:6px; width:40px;">No</th>
-                        <th style="border:1px solid #000; padding:6px;">Komponen</th>
-                        <th style="border:1px solid #000; padding:6px;">Uraian</th>
-                        <th style="border:1px solid #000; padding:6px; width:100px;">Nilai</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @php
-                        $i = 1;
-                        $map = $siswa->nilai_detail_map;
-                    @endphp
-                    @foreach($map as $komponen => $sub)
-                        @if(is_array($sub))
-                            @foreach($sub as $uraian => $nilai)
-                                <tr>
-                                    <td style="border:1px solid #000; padding:6px; text-align:center;">{{ $i++ }}</td>
-                                    <td style="border:1px solid #000; padding:6px;">{{ $komponen }}</td>
-                                    <td style="border:1px solid #000; padding:6px;">{{ $uraian }}</td>
-                                    <td style="border:1px solid #000; padding:6px; text-align:center;">{{ is_numeric($nilai) ? number_format($nilai, 2) : $nilai }}</td>
-                                </tr>
-                            @endforeach
-                        @else
+    @endif
+    @if(empty($only_certificate) && isset($siswa->nilai_detail_map) && is_array($siswa->nilai_detail_map) && !empty($siswa->nilai_detail_map))
+        @if(($grade_sheet_format ?? '') === 'prakerin')
+            @include('master.sertifikat.grades.prakerin', ['siswa' => $siswa, 'signatures' => $signatures ?? null])
+        @elseif(($grade_sheet_format ?? '') === 'tugas_akhir')
+            @include('master.sertifikat.grades.tugas_akhir', ['siswa' => $siswa, 'signatures' => $signatures ?? null])
+        @else
+            <div class="certificate-page">
+                <div style="position:absolute; left: 5%; top: 5%; right:5%; bottom:5%;">
+                    <h2 style="text-align:center; margin-bottom: 16px;">Lampiran Nilai - {{ $siswa->nama }}</h2>
+                    @php $cmp = $siswa->nilai_computed ?? []; @endphp
+                    <div style="margin-bottom: 14px; font-size: 14px;">
+                        @if(isset($cmp['total']))<span style="margin-right:16px;">Total: {{ $cmp['total'] }}</span>@endif
+                        @if(isset($cmp['avg']))<span style="margin-right:16px;">Rata-rata: {{ $cmp['avg'] }}</span>@endif
+                        @if(isset($cmp['weighted_avg']))<span style="margin-right:16px;">Rata-rata Berbobot: {{ $cmp['weighted_avg'] }}</span>@endif
+                        @if(isset($cmp['grade']))<span style="margin-right:16px;">Predikat: {{ $cmp['grade'] }}</span>@endif
+                    </div>
+                    <table style="width:100%; border-collapse: collapse; font-size: 13px;">
+                        <thead>
                             <tr>
-                                <td style="border:1px solid #000; padding:6px; text-align:center;">{{ $i++ }}</td>
-                                <td style="border:1px solid #000; padding:6px;">-</td>
-                                <td style="border:1px solid #000; padding:6px;">{{ $komponen }}</td>
-                                <td style="border:1px solid #000; padding:6px; text-align:center;">{{ is_numeric($sub) ? number_format($sub, 2) : $sub }}</td>
+                                <th style="border:1px solid #000; padding:6px; width:40px;">No</th>
+                                <th style="border:1px solid #000; padding:6px;">Komponen</th>
+                                <th style="border:1px solid #000; padding:6px;">Uraian</th>
+                                <th style="border:1px solid #000; padding:6px; width:100px;">Nilai</th>
                             </tr>
-                        @endif
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
+                        </thead>
+                        <tbody>
+                            @php $i = 1; $map = $siswa->nilai_detail_map; @endphp
+                            @foreach($map as $komponen => $sub)
+                                @if(is_array($sub))
+                                    @foreach($sub as $uraian => $nilai)
+                                        <tr>
+                                            <td style="border:1px solid #000; padding:6px; text-align:center;">{{ $i++ }}</td>
+                                            <td style="border:1px solid #000; padding:6px;">{{ $komponen }}</td>
+                                            <td style="border:1px solid #000; padding:6px;">{{ $uraian }}</td>
+                                            <td style="border:1px solid #000; padding:6px; text-align:center;">{{ is_numeric($nilai) ? number_format($nilai, 2) : $nilai }}</td>
+                                        </tr>
+                                    @endforeach
+                                @else
+                                    <tr>
+                                        <td style="border:1px solid #000; padding:6px; text-align:center;">{{ $i++ }}</td>
+                                        <td style="border:1px solid #000; padding:6px;">-</td>
+                                        <td style="border:1px solid #000; padding:6px;">{{ $komponen }}</td>
+                                        <td style="border:1px solid #000; padding:6px; text-align:center;">{{ is_numeric($sub) ? number_format($sub, 2) : $sub }}</td>
+                                    </tr>
+                                @endif
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
     @endif
     @endforeach
 </body>

@@ -57,10 +57,15 @@
                     {{-- Aksi --}}
                     <div class="flex justify-end gap-2 mt-5 pt-3 border-t">
                         <x-ui.button :href="route('master.penilaian.edit', $item->id)" variant="secondary" size="sm">Edit</x-ui.button>
-                        <form action="{{ route('master.penilaian.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus template ini?')" class="inline">
+                        <form action="{{ route('master.penilaian.destroy', $item->id) }}" method="POST" class="inline">
                             @csrf
                             @method('DELETE')
-                            <x-ui.button type="submit" variant="danger" size="sm">Hapus</x-ui.button>
+                            <x-ui.button type="button" variant="danger" size="sm"
+                                         data-confirm-delete
+                                         data-name="{{ $item->nama_template }}"
+                                         data-title="Hapus Template?"
+                                         data-confirm-label="Ya, hapus"
+                                         data-cancel-label="Batal">Hapus</x-ui.button>
                         </form>
                     </div>
                 </div>

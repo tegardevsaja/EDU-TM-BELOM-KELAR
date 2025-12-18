@@ -15,7 +15,7 @@ class OtpRequestController extends Controller
 {
     public function showForm()
     {
-        return view('request-otp');
+        return view('livewire.request-otp');
     }
 
     public function sendOtp(Request $request)

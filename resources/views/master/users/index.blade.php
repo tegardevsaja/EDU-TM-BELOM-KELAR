@@ -53,10 +53,15 @@
                                                 <a href="{{ route($routePrefix . '.users.edit', $user->id) }}" class="rounded bg-yellow-500 px-3 py-1.5 text-xs text-white hover:bg-yellow-600">Edit</a>
                                             @endcan
                                             @can('users.delete')
-                                                <form action="{{ route($routePrefix . '.users.destroy', $user->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus user ini?')">
+                                                <form action="{{ route($routePrefix . '.users.destroy', $user->id) }}" method="POST">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="rounded bg-red-600 px-3 py-1.5 text-xs text-white hover:bg-red-700">Hapus</button>
+                                                    <button type="button" class="rounded bg-red-600 px-3 py-1.5 text-xs text-white hover:bg-red-700"
+                                                            data-confirm-delete
+                                                            data-name="{{ $user->name }}"
+                                                            data-title="Hapus Akun?"
+                                                            data-confirm-label="Ya, hapus"
+                                                            data-cancel-label="Batal">Hapus</button>
                                                 </form>
                                             @endcan
                                         </div>

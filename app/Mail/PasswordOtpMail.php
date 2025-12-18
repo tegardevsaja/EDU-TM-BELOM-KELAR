@@ -19,7 +19,7 @@ class PasswordOtpMail extends Mailable
 
     public function build()
     {
-        return $this->subject('Kode OTP Reset Password')
+        return $this->subject('APPS EDU TM - Kode OTP Reset Password')
                     ->markdown('emails.password_otp')
                     ->with(['otp' => $this->otp]);
     }

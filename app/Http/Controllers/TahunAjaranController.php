@@ -37,14 +37,10 @@ class TahunAjaranController extends Controller
             'aktif' => 'nullable|boolean',
         ]);
 
-        // Hanya satu tahun ajaran aktif
-        if ($request->filled('aktif') && $request->aktif) {
-            TahunAjaran::where('aktif', true)->update(['aktif' => false]);
-        }
-
+        // Multiple tahun ajaran aktif diperbolehkan
         TahunAjaran::create($request->only('tahun_ajaran', 'tanggal_mulai', 'tanggal_selesai', 'aktif'));
 
-        return redirect()->route('master.tahun-ajaran')
+        return redirect()->route('master.tahunAjaran')
                          ->with('success', 'Tahun ajaran berhasil ditambahkan.');
     }
 
@@ -54,7 +50,7 @@ class TahunAjaranController extends Controller
     public function edit($id)
     {
         $tahunAjaran = TahunAjaran::findOrFail($id);
-        return view('master.tahun_ajaran.edit', compact('tahunAjaran'));
+        return view('master.tahun-ajaran.edit', compact('tahunAjaran'));
     }
 
     /**
@@ -71,15 +67,10 @@ class TahunAjaranController extends Controller
             'aktif' => 'nullable|boolean',
         ]);
 
-        if ($request->filled('aktif') && $request->aktif) {
-            TahunAjaran::where('aktif', true)
-                       ->where('id', '!=', $tahunAjaran->id)
-                       ->update(['aktif' => false]);
-        }
-
+        // Multiple tahun ajaran aktif diperbolehkan - tidak perlu deactivate yang lain
         $tahunAjaran->update($request->only('tahun_ajaran', 'tanggal_mulai', 'tanggal_selesai', 'aktif'));
 
-        return redirect()->route('master.tahun-ajaran.index')
+        return redirect()->route('master.tahunAjaran')
                          ->with('success', 'Tahun ajaran berhasil diperbarui.');
     }
 
@@ -90,7 +81,7 @@ class TahunAjaranController extends Controller
     {
         TahunAjaran::findOrFail($id)->delete();
 
-        return redirect()->route('master.tahun-ajaran.index')
+        return redirect()->route('master.tahunAjaran')
                          ->with('success', 'Tahun ajaran berhasil dihapus.');
     }
 }

@@ -22,8 +22,11 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 50%, #f1f3f5 100%);
             min-height: 100vh;
+            background: 
+                linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.25) 40%, rgba(0,0,0,0.15) 100%),
+                url('{{ asset('img/gedungB.jpg') }}') center/cover no-repeat fixed;
+            color: #111827;
         }
 
         .fade-in {
@@ -67,9 +70,11 @@
 <body class="text-gray-900">
 
     <!-- Header -->
-    <header class="fixed top-0 left-0 right-0 z-50 px-8 py-5 bg-white/70 backdrop-blur-xl border-b border-gray-200/50">
+    <header class="fixed top-0 left-0 right-0 z-50 px-8 py-5 bg-transparent border-transparent">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <div class="text-xl font-semibold tracking-tight text-gray-900">EDU TM</div>
+            <div class="flex items-center">
+                <img src="{{ asset('logo/EduTMLogo.png') }}" alt="EDU TM" class="h-8 sm:h-9 w-auto" />
+            </div>
             
             <nav class="flex items-center gap-3">
                 @auth
@@ -92,11 +97,8 @@
                     </a>
                 @else
                     {{-- Navigation untuk user yang belum login --}}
-                    <a href="{{ url('/login') }}" class="px-6 py-2 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-100 transition">
-                        Log in
-                    </a>
-                    <a href="{{ url('/register') }}" class="px-6 py-2 rounded-full text-sm font-medium bg-gray-900 text-white hover:bg-gray-800 transition">
-                        Register
+                    <a href="{{ url('/login') }}" class="px-6 py-2 rounded-full text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-500/30 transition">
+                        Masuk
                     </a>
                 @endauth
             </nav>
@@ -105,82 +107,30 @@
 
     <!-- Main Content -->
     <main class="flex flex-col items-center justify-center min-h-screen px-8 pt-24">
-        
-        <div class="max-w-6xl w-full mx-auto text-center">
-
-            <!-- Logo Letters -->
-            <div class="flex justify-center gap-4 lg:gap-8 mb-20">
-                <h1 class="letter opacity-0 font-black text-gray-900" 
-                    style="font-size: clamp(5rem, 16vw, 12rem); letter-spacing: -0.03em;">
-                    E
-                </h1>
-                <h1 class="letter opacity-0 font-black text-gray-900" 
-                    style="font-size: clamp(5rem, 16vw, 12rem); letter-spacing: -0.03em;">
-                    D
-                </h1>
-                <h1 class="letter opacity-0 font-black text-gray-900" 
-                    style="font-size: clamp(5rem, 16vw, 12rem); letter-spacing: -0.03em;">
-                    U
-                </h1>
-                <h1 class="letter opacity-0 font-black text-gray-900" 
-                    style="font-size: clamp(5rem, 16vw, 12rem); letter-spacing: -0.03em;">
-                    T
-                </h1>
-                <h1 class="letter opacity-0 font-black text-gray-900" 
-                    style="font-size: clamp(5rem, 16vw, 12rem); letter-spacing: -0.03em;">
-                    M
-                </h1>
-            </div>
-
-            <!-- Divider Line -->
-            <div class="w-24 h-px bg-gray-300 mx-auto mb-16 fade-in" style="animation-delay: 0.7s;"></div>
-
-            <!-- Subtitle -->
-            <p class="text-sm uppercase tracking-wider text-gray-500 font-medium mb-12 fade-in" style="animation-delay: 0.9s;">
-                Created by
+        <div class="max-w-4xl w-full mx-auto text-center fade-in" style="animation-delay: 0.3s;">
+            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-5 tracking-tight drop-shadow-md">
+                Selamat Datang di EDU TM
+            </h1>
+            <p class="text-white/90 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto drop-shadow">
+                Platform manajemen akademik modern untuk sekolah. Kelola siswa, nilai, dan sertifikat dengan cepat dan mudah.
+            </p>
+            <p class="text-white/90 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto drop-shadow">
+                Silakan login untuk mulai mengelola data siswa, penilaian, dan aktivitas pembelajaran.
             </p>
 
-            <!-- Main Author -->
-            <div class="mb-12">
-                <h2 class="author-name text-6xl lg:text-8xl font-light text-gray-800" 
-                    style="animation-delay: 1.1s; letter-spacing: 0.05em;">
-                    TEGAR
-                </h2>
-                <p class="text-base lg:text-lg text-gray-500 font-medium mt-3 fade-in" style="animation-delay: 1.3s;">
-                    Project Lead
-                </p>
-            </div>
-
-            <!-- Divider Line -->
-            <div class="w-32 h-px bg-gray-300 mx-auto my-16 fade-in" style="animation-delay: 1.5s;"></div>
-
-            <!-- Support Team -->
-            <div class="mb-6">
-                <p class="text-sm uppercase tracking-wider text-gray-500 font-medium mb-8 fade-in" style="animation-delay: 1.7s;">
-                    Support Team
-                </p>
-                
-                <div class="flex flex-col lg:flex-row justify-center items-center gap-8 lg:gap-16">
-                    <!-- AISYAH -->
-                    <h3 class="author-name text-4xl lg:text-5xl font-light text-gray-700" 
-                        style="animation-delay: 1.9s; letter-spacing: 0.05em;">
-                        AISYAH
-                    </h3>
-
-                    <!-- KAYRA -->
-                    <h3 class="author-name text-4xl lg:text-5xl font-light text-gray-700" 
-                        style="animation-delay: 2.1s; letter-spacing: 0.05em;">
-                        KAYRA
-                    </h3>
+            @guest
+                <div class="mt-8 flex items-center justify-center">
+                    <a href="{{ url('/login') }}" class="px-7 py-3 rounded-full text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-500/30 transition">
+                        Masuk ke Aplikasi
+                    </a>
                 </div>
-            </div>
-
+            @endguest
         </div>
     </main>
 
     <!-- Footer -->
-    <footer class="mt-4 bottom-0 left-0 right-0 py-4 text-center bg-white/70 backdrop-blur-xl border-t border-gray-200/50">
-        <p class="text-sm text-gray-500">© 2025 EDU TM — All rights reserved.</p>
+    <footer class="mt-4 bottom-0 left-0 right-0 py-4 text-center bg-transparent">
+        <p class="text-sm text-white/80">2025 EDU TM — All rights reserved.</p>
     </footer>
 
 </body>

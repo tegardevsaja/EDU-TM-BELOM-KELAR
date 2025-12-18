@@ -13,6 +13,18 @@ class RolePermissionController extends Controller
 {
     public function index(): View
     {
+        // Pastikan permission 'absensi' tersedia agar muncul di UI
+        $absensiPerms = [
+            'menu.absensi',
+            'absensi.view','absensi.create','absensi.update','absensi.delete',
+            'absensi.import','absensi.export','absensi.template'
+        ];
+        foreach ($absensiPerms as $perm) {
+            \Spatie\Permission\Models\Permission::firstOrCreate(['name' => $perm]);
+        }
+        // Reset cache agar daftar terbaru muncul
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
         $roles = Role::orderBy('name')->get();
         $permissions = Permission::orderBy('name')->get();
 
